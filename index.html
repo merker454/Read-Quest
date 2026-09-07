@@ -74,6 +74,7 @@
       gap: 8px;
       padding: 16px 24px;
       border-bottom: 1px solid #e5e5e5;
+      overflow-x: auto;
     }
     .tab-btn {
       background: transparent;
@@ -85,6 +86,7 @@
       color: #999;
       font-weight: 400;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .tab-btn.active {
       background: #1a1a1a;
@@ -194,6 +196,20 @@
       font-size: 13px;
       font-weight: 500;
     }
+    .btn-add {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #bbdefb;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-add:hover {
+      background: #bbdefb;
+    }
     .book-list {
       display: flex;
       flex-direction: column;
@@ -217,6 +233,11 @@
       margin: 0;
     }
     .book-progress {
+      font-size: 13px;
+      color: #999;
+      margin: 4px 0 0;
+    }
+    .book-meta {
       font-size: 13px;
       color: #999;
       margin: 4px 0 0;
@@ -297,7 +318,7 @@
       font-size: 14px;
       color: #666;
       margin: 0 0 12px;
-  }
+    }
     .challenge-progress {
       display: flex;
       height: 8px;
@@ -310,6 +331,46 @@
       font-size: 12px;
       color: #999;
       margin: 0;
+    }
+    .level-section {
+      margin-bottom: 24px;
+    }
+    .level-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e5e5;
+      color: #1a1a1a;
+    }
+    .recommendation-card {
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      margin-bottom: 12px;
+    }
+    .rec-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin: 0 0 4px;
+      color: #1a1a1a;
+    }
+    .rec-author {
+      font-size: 12px;
+      color: #999;
+      margin: 0 0 8px;
+    }
+    .rec-description {
+      font-size: 13px;
+      color: #666;
+      margin: 0 0 12px;
+      line-height: 1.4;
+    }
+    .rec-chapters {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 12px;
     }
   </style>
 </head>
@@ -326,6 +387,33 @@
         { name: 'Teen', ages: '13-16', points: 10, color: '#D85A30' },
         { name: 'Adult', ages: '17+', points: 12, color: '#185FA5' }
       ];
+
+      const RECOMMENDATIONS = {
+        0: [
+          { title: "Charlotte's Web", author: 'E.B. White', chapters: 22, description: 'A touching story about friendship between a pig and a spider.' },
+          { title: 'The Very Hungry Caterpillar', author: 'Eric Carle', chapters: 10, description: 'A delightful picture book about a caterpillar's transformation.' },
+          { title: 'Where the Wild Things Are', author: 'Maurice Sendak', chapters: 8, description: 'A boy sails away to an island filled with wild things.' },
+          { title: 'Winnie-the-Pooh', author: 'A.A. Milne', chapters: 20, description: 'Classic tales of a bear and his friends in the Hundred Acre Wood.' }
+        ],
+        1: [
+          { title: 'Percy Jackson & The Olympians', author: 'Rick Riordan', chapters: 37, description: 'A boy discovers he\'s the son of a Greek god and goes on epic quests.' },
+          { title: 'Harry Potter', author: 'J.K. Rowling', chapters: 34, description: 'A young wizard discovers a magical world hidden from muggles.' },
+          { title: 'Wings of Fire', author: 'Tui T. Sutherland', chapters: 28, description: 'Dragons with prophecies must save their world from war.' },
+          { title: 'The Hunger Games', author: 'Suzanne Collins', chapters: 27, description: 'A girl must survive a deadly competition in a dystopian future.' }
+        ],
+        2: [
+          { title: 'The Fault in Our Stars', author: 'John Green', chapters: 48, description: 'Two teens with life-threatening illnesses meet and fall in love.' },
+          { title: 'Six of Crows', author: 'Leigh Bardugo', chapters: 38, description: 'Six criminals attempt an impossible heist in a magical world.' },
+          { title: 'The 5th Wave', author: 'Rick Yancey', chapters: 40, description: 'Aliens invade Earth in waves; a girl must survive the apocalypse.' },
+          { title: 'Shadow of the Fox', author: 'Julie Kagawa', chapters: 45, description: 'A half-kitsune warrior joins a team to fight demons.' }
+        ],
+        3: [
+          { title: 'Dune', author: 'Frank Herbert', chapters: 68, description: 'An epic sci-fi saga set on a desert planet with political intrigue.' },
+          { title: 'The Name of the Wind', author: 'Patrick Rothfuss', chapters: 66, description: 'A man tells his life story of becoming a powerful wizard.' },
+          { title: 'Project Hail Mary', author: 'Andy Weir', chapters: 51, description: 'An astronaut must save Earth from extinction on an alien mission.' },
+          { title: 'Educated', author: 'Tara Westover', chapters: 40, description: 'A memoir about escaping a survivalist family to pursue education.' }
+        ]
+      };
 
       const [profile, setProfile] = useState(() => {
         const saved = localStorage.getItem('readingProfile');
@@ -435,6 +523,19 @@
         }
       };
 
+      const addFromRecommendation = (book) => {
+        const newBookEntry = {
+          id: Date.now(),
+          title: book.title,
+          chapters: book.chapters,
+          currentChapter: 0,
+          completed: false,
+          dateAdded: new Date().toDateString(),
+          author: book.author
+        };
+        setBooks(prev => [...prev, newBookEntry]);
+      };
+
       const pointsPerChapter = profile.level !== null ? LEVELS[profile.level].points : 0;
       const levelName = profile.level !== null ? LEVELS[profile.level].name : 'Not selected';
 
@@ -465,7 +566,7 @@
           </div>
 
           <div className="tabs">
-            {['profile', 'books', 'achievements', 'challenges'].map(t => (
+            {['profile', 'books', 'recommendations', 'achievements', 'challenges'].map(t => (
               <button
                 key={t}
                 className={`tab-btn ${tab === t ? 'active' : ''}`}
@@ -534,13 +635,14 @@
 
                     <div className="book-list">
                       {books.length === 0 ? (
-                        <p className="empty-message">No books yet. Add one to start reading!</p>
+                        <p className="empty-message">No books yet. Add one or check Recommendations!</p>
                       ) : (
                         books.map((book, idx) => (
                           <div key={book.id} className="book-card">
                             <div className="book-header">
                               <div>
                                 <h3 className="book-title">{book.title}</h3>
+                                {book.author && <p className="book-meta">by {book.author}</p>}
                                 <p className="book-progress">
                                   {book.completed ? '✓ Completed' : `Ch ${book.currentChapter} / ${book.chapters}`}
                                 </p>
@@ -568,6 +670,33 @@
                       )}
                     </div>
                   </>
+                )}
+              </div>
+            )}
+
+            {tab === 'recommendations' && (
+              <div>
+                {profile.level === null ? (
+                  <p className="empty-message">Select a reading level first to see recommendations</p>
+                ) : (
+                  <div>
+                    {LEVELS.map((level, idx) => (
+                      <div key={idx} className="level-section">
+                        <div className="level-section-title">{level.name}</div>
+                        {RECOMMENDATIONS[idx].map((book, bookIdx) => (
+                          <div key={bookIdx} className="recommendation-card">
+                            <h3 className="rec-title">{book.title}</h3>
+                            <p className="rec-author">by {book.author}</p>
+                            <p className="rec-description">{book.description}</p>
+                            <p className="rec-chapters">{book.chapters} chapters • +{level.points} pts/ch</p>
+                            <button className="btn-add" onClick={() => addFromRecommendation(book)}>
+                              Add to my books
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
