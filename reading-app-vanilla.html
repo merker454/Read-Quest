@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading App - Track Your Reading Progress</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .header h1 { font-size: 24px; font-weight: 500; }
+    .header-info { text-align: right; }
+    .header-info p { font-size: 14px; margin: 0; color: #666; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .stat-card { background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #e5e5e5; }
+    .stat-label { font-size: 12px; color: #999; margin-bottom: 4px; }
+    .stat-value { font-size: 20px; font-weight: 500; color: #1a1a1a; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e5e5;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #999;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    .tab-btn.active { background: #1a1a1a; color: white; font-weight: 500; }
+    .tab-content { padding: 24px; display: none; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 14px; display: block; margin-bottom: 8px; font-weight: 500; color: #1a1a1a; }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #1a1a1a;
+      box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.1);
+    }
+    .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .level-btn {
+      padding: 16px;
+      border: 1.5px solid #e5e5e5;
+      border-radius: 8px;
+      background: #f9f9f9;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+    .level-btn.selected { border-color: #1a1a1a; background: #1a1a1a; color: white; }
+    .level-subtitle { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+    .level-points { font-size: 13px; margin-top: 6px; opacity: 0.9; }
+    .add-book-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      margin-bottom: 24px;
+    }
+    .btn-primary { background: #1a1a1a; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .btn-primary:hover { background: #333; }
+    .btn-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-add { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-add:hover { background: #bbdefb; }
+    .book-list { display: flex; flex-direction: column; gap: 12px; }
+    .book-card { padding: 12px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5; }
+    .book-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+    .book-title { font-size: 15px; font-weight: 500; margin: 0; }
+    .book-progress { font-size: 13px; color: #999; margin: 4px 0 0; }
+    .points-badge { font-size: 12px; background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 4px; }
+    .progress-bar { display: flex; height: 6px; background: #e5e5e5; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #1a1a1a; }
+    .button-group { display: flex; gap: 8px; }
+    .button-group button { flex: 1; }
+    .empty-message { text-align: center; color: #999; padding: 24px; }
+    .achievement-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .achievement-card { padding: 12px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5; text-align: center; opacity: 0.5; }
+    .achievement-card.unlocked { background: #e8f5e9; border-color: #c8e6c9; opacity: 1; }
+    .achievement-emoji { font-size: 24px; margin-bottom: 6px; }
+    .achievement-name { font-size: 12px; color: #999; margin: 0; }
+    .challenge-card { padding: 12px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5; margin-bottom: 12px; }
+    .challenge-title { font-size: 15px; font-weight: 500; margin: 0 0 8px; }
+    .challenge-desc { font-size: 14px; color: #666; margin: 0 0 12px; }
+    .challenge-progress { display: flex; height: 8px; background: #e5e5e5; border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+    .challenge-stat { font-size: 12px; color: #999; margin: 0; }
+    .level-section { margin-bottom: 24px; }
+    .level-section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e5e5; color: #1a1a1a; }
+    .recommendation-card { padding: 12px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5; margin-bottom: 12px; }
+    .rec-title { font-size: 14px; font-weight: 500; margin: 0 0 4px; color: #1a1a1a; }
+    .rec-author { font-size: 12px; color: #999; margin: 0 0 8px; }
+    .rec-description { font-size: 13px; color: #666; margin: 0 0 12px; line-height: 1.4; }
+    .rec-chapters { font-size: 12px; color: #999; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <h1>Reader</h1>
+        <div class="header-info">
+          <p id="userName">Guest</p>
+          <p id="userLevel">Level: Not selected</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Points</div>
+          <div class="stat-value" id="pointsValue">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Books</div>
+          <div class="stat-value" id="booksValue">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Streak</div>
+          <div class="stat-value" id="streakValue">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('profile')">Profile</button>
+      <button class="tab-btn" onclick="switchTab('books')">Books</button>
+      <button class="tab-btn" onclick="switchTab('recommendations')">Recommendations</button>
+      <button class="tab-btn" onclick="switchTab('achievements')">Achievements</button>
+      <button class="tab-btn" onclick="switchTab('challenges')">Challenges</button>
+    </div>
+
+    <div class="tab-content active" id="tab-profile">
+      <div class="form-group">
+        <label class="form-label">Your name</label>
+        <input type="text" id="userName" placeholder="Enter your name" onchange="updateProfile()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select your reading level</label>
+        <div class="level-grid">
+          <button class="level-btn" onclick="selectLevel(0)"><div>Early Reader</div><div class="level-subtitle">Ages 5-8</div><div class="level-points">5 pts/ch</div></button>
+          <button class="level-btn" onclick="selectLevel(1)"><div>Junior</div><div class="level-subtitle">Ages 9-12</div><div class="level-points">8 pts/ch</div></button>
+          <button class="level-btn" onclick="selectLevel(2)"><div>Teen</div><div class="level-subtitle">Ages 13-16</div><div class="level-points">10 pts/ch</div></button>
+          <button class="level-btn" onclick="selectLevel(3)"><div>Adult</div><div class="level-subtitle">Ages 17+</div><div class="level-points">12 pts/ch</div></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-books">
+      <div id="bookContent"></div>
+    </div>
+
+    <div class="tab-content" id="tab-recommendations">
+      <div id="recContent"></div>
+    </div>
+
+    <div class="tab-content" id="tab-achievements">
+      <div class="achievement-grid" id="achievementsGrid"></div>
+    </div>
+
+    <div class="tab-content" id="tab-challenges">
+      <div id="challengesContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const LEVELS = [
+      { name: "Early Reader", ages: "5-8", points: 5 },
+      { name: "Junior", ages: "9-12", points: 8 },
+      { name: "Teen", ages: "13-16", points: 10 },
+      { name: "Adult", ages: "17+", points: 12 }
+    ];
+
+    const RECOMMENDATIONS = {
+      0: [
+        { title: "Charlotte's Web", author: "E.B. White", chapters: 22, description: "A touching story about friendship between a pig and a spider." },
+        { title: "The Very Hungry Caterpillar", author: "Eric Carle", chapters: 10, description: "A delightful picture book about a caterpillar's transformation." },
+        { title: "Where the Wild Things Are", author: "Maurice Sendak", chapters: 8, description: "A boy sails away to an island filled with wild things." },
+        { title: "Winnie-the-Pooh", author: "A.A. Milne", chapters: 20, description: "Classic tales of a bear and his friends in the Hundred Acre Wood." }
+      ],
+      1: [
+        { title: "Percy Jackson and the Olympians", author: "Rick Riordan", chapters: 37, description: "A boy discovers he is the son of a Greek god and goes on epic quests." },
+        { title: "Harry Potter", author: "J.K. Rowling", chapters: 34, description: "A young wizard discovers a magical world hidden from muggles." },
+        { title: "Wings of Fire", author: "Tui T. Sutherland", chapters: 28, description: "Dragons with prophecies must save their world from war." },
+        { title: "The Hunger Games", author: "Suzanne Collins", chapters: 27, description: "A girl must survive a deadly competition in a dystopian future." }
+      ],
+      2: [
+        { title: "The Fault in Our Stars", author: "John Green", chapters: 48, description: "Two teens with life-threatening illnesses meet and fall in love." },
+        { title: "Six of Crows", author: "Leigh Bardugo", chapters: 38, description: "Six criminals attempt an impossible heist in a magical world." },
+        { title: "The 5th Wave", author: "Rick Yancey", chapters: 40, description: "Aliens invade Earth in waves; a girl must survive the apocalypse." },
+        { title: "Shadow of the Fox", author: "Julie Kagawa", chapters: 45, description: "A half-kitsune warrior joins a team to fight demons." }
+      ],
+      3: [
+        { title: "Dune", author: "Frank Herbert", chapters: 68, description: "An epic sci-fi saga set on a desert planet with political intrigue." },
+        { title: "The Name of the Wind", author: "Patrick Rothfuss", chapters: 66, description: "A man tells his life story of becoming a powerful wizard." },
+        { title: "Project Hail Mary", author: "Andy Weir", chapters: 51, description: "An astronaut must save Earth from extinction on an alien mission." },
+        { title: "Educated", author: "Tara Westover", chapters: 40, description: "A memoir about escaping a survivalist family to pursue education." }
+      ]
+    };
+
+    let profile = JSON.parse(localStorage.getItem("readingProfile")) || { name: "", level: null, totalPoints: 0, booksRead: 0, currentStreak: 0, lastReadDate: null };
+    let books = JSON.parse(localStorage.getItem("readingBooks")) || [];
+    let achievements = JSON.parse(localStorage.getItem("readingAchievements")) || [];
+
+    function save() {
+      localStorage.setItem("readingProfile", JSON.stringify(profile));
+      localStorage.setItem("readingBooks", JSON.stringify(books));
+      localStorage.setItem("readingAchievements", JSON.stringify(achievements));
+      updateUI();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById("tab-" + tab).classList.add("active");
+      event.target.classList.add("active");
+      if (tab === "books") renderBooks();
+      if (tab === "recommendations") renderRecommendations();
+      if (tab === "achievements") renderAchievements();
+      if (tab === "challenges") renderChallenges();
+    }
+
+    function selectLevel(idx) {
+      profile.level = idx;
+      save();
+    }
+
+    function updateProfile() {
+      profile.name = document.getElementById("userName").value;
+      save();
+    }
+
+    function renderBooks() {
+      if (profile.level === null) {
+        document.getElementById("bookContent").innerHTML = "<p class='empty-message'>Select a reading level first</p>";
+        return;
+      }
+      let html = "<div class='add-book-form'><input type='text' id='bookTitle' placeholder='Book title'><input type='number' id='bookChapters' placeholder='Total chapters' min='1'><button class='btn-primary' onclick='addBook()'>Add book</button></div>";
+      if (books.length === 0) {
+        html += "<p class='empty-message'>No books yet. Add one or check Recommendations!</p>";
+      } else {
+        html += "<div class='book-list'>";
+        books.forEach((book, idx) => {
+          const pointsPerChapter = LEVELS[profile.level].points;
+          const progress = (book.currentChapter / book.chapters) * 100;
+          html += "<div class='book-card'><div class='book-header'><div><h3 class='book-title'>" + book.title + "</h3><p class='book-progress'>" + (book.completed ? "Complete" : "Ch " + book.currentChapter + " / " + book.chapters) + "</p></div>" + (!book.completed ? "<span class='points-badge'>+" + pointsPerChapter + " pts</span>" : "") + "</div>";
+          if (!book.completed) {
+            html += "<div class='progress-bar'><div class='progress-fill' style='width:" + progress + "%'></div></div>";
+            html += "<div class='button-group'><button class='btn-primary' onclick='logChapter(" + idx + ")'>Log chapter</button>";
+            if (book.currentChapter === book.chapters) {
+              html += "<button class='btn-success' onclick='completeBook(" + idx + ")'>Finish book</button>";
+            }
+            html += "</div>";
+          }
+          html += "</div>";
+        });
+        html += "</div>";
+      }
+      document.getElementById("bookContent").innerHTML = html;
+    }
+
+    function addBook() {
+      const title = document.getElementById("bookTitle").value;
+      const chapters = parseInt(document.getElementById("bookChapters").value);
+      if (title && chapters > 0) {
+        books.push({ id: Date.now(), title: title, chapters: chapters, currentChapter: 0, completed: false });
+        document.getElementById("bookTitle").value = "";
+        document.getElementById("bookChapters").value = "";
+        save();
+        renderBooks();
+      }
+    }
+
+    function logChapter(idx) {
+      if (books[idx].currentChapter < books[idx].chapters) {
+        books[idx].currentChapter++;
+        profile.totalPoints += LEVELS[profile.level].points;
+        const today = new Date().toDateString();
+        const lastDate = profile.lastReadDate ? new Date(profile.lastReadDate).toDateString() : null;
+        if (lastDate !== today) {
+          profile.currentStreak = (lastDate === new Date(Date.now() - 86400000).toDateString()) ? profile.currentStreak + 1 : 1;
+        }
+        profile.lastReadDate = today;
+        save();
+        renderBooks();
+      }
+    }
+
+    function completeBook(idx) {
+      books[idx].completed = true;
+      profile.booksRead++;
+      save();
+      renderBooks();
+    }
+
+    function renderRecommendations() {
+      if (profile.level === null) {
+        document.getElementById("recContent").innerHTML = "<p class='empty-message'>Select a reading level first</p>";
+        return;
+      }
+      let html = "";
+      LEVELS.forEach((level, levelIdx) => {
+        html += "<div class='level-section'><div class='level-section-title'>" + level.name + "</div>";
+        RECOMMENDATIONS[levelIdx].forEach(book => {
+          html += "<div class='recommendation-card'><h3 class='rec-title'>" + book.title + "</h3><p class='rec-author'>by " + book.author + "</p><p class='rec-description'>" + book.description + "</p><p class='rec-chapters'>" + book.chapters + " chapters | +" + level.points + " pts/ch</p><button class='btn-add' onclick='addFromRec(\"" + book.title + "\", " + book.chapters + ", \"" + book.author + "\")'>Add to my books</button></div>";
+        });
+        html += "</div>";
+      });
+      document.getElementById("recContent").innerHTML = html;
+    }
+
+    function addFromRec(title, chapters, author) {
+      books.push({ id: Date.now(), title: title, chapters: chapters, currentChapter: 0, completed: false, author: author });
+      save();
+    }
+
+    function renderAchievements() {
+      const allAch = [
+        { id: "first100", name: "Century", desc: "Earn 100 points", check: () => profile.totalPoints >= 100 },
+        { id: "first500", name: "Milestone", desc: "Earn 500 points", check: () => profile.totalPoints >= 500 },
+        { id: "first1000", name: "Legend", desc: "Earn 1000 points", check: () => profile.totalPoints >= 1000 },
+        { id: "book1", name: "Debut", desc: "Complete 1 book", check: () => profile.booksRead >= 1 },
+        { id: "book5", name: "Collector", desc: "Complete 5 books", check: () => profile.booksRead >= 5 },
+        { id: "book10", name: "Scholar", desc: "Complete 10 books", check: () => profile.booksRead >= 10 },
+        { id: "streak7", name: "On Fire", desc: "7-day reading streak", check: () => profile.currentStreak >= 7 },
+        { id: "streak30", name: "Dedicated", desc: "30-day reading streak", check: () => profile.currentStreak >= 30 }
+      ];
+      allAch.forEach(ach => {
+        if (ach.check() && !achievements.includes(ach.id)) {
+          achievements.push(ach.id);
+        }
+      });
+      let html = "";
+      allAch.forEach(ach => {
+        const unlocked = achievements.includes(ach.id);
+        html += "<div class='achievement-card " + (unlocked ? "unlocked" : "") + "'><div class='achievement-emoji'>*</div><p class='achievement-name'>" + ach.desc + "</p></div>";
+      });
+      document.getElementById("achievementsGrid").innerHTML = html;
+      save();
+    }
+
+    function renderChallenges() {
+      const totalChapters = books.reduce((sum, b) => sum + b.currentChapter, 0);
+      const pointsGoal = profile.level !== null ? LEVELS[profile.level].points * 20 : 160;
+      let html = "<div class='challenge-card'><h3 class='challenge-title'>This week</h3><p class='challenge-desc'>Read 3 chapters</p><div class='challenge-progress'><div style='width:" + Math.min((totalChapters % 3) * 33, 100) + "%;background:#1a1a1a'></div></div><p class='challenge-stat'>" + Math.min(totalChapters % 3, 3) + " / 3</p></div>";
+      html += "<div class='challenge-card'><h3 class='challenge-title'>This month</h3><p class='challenge-desc'>Earn " + pointsGoal + " points</p><div class='challenge-progress'><div style='width:" + Math.min((profile.totalPoints / pointsGoal) * 100, 100) + "%;background:#1a1a1a'></div></div><p class='challenge-stat'>" + profile.totalPoints + " / " + pointsGoal + "</p></div>";
+      html += "<div class='challenge-card'><h3 class='challenge-title'>Streak goal</h3><p class='challenge-desc'>Read for 30 days straight</p><div class='challenge-progress'><div style='width:" + Math.min((profile.currentStreak / 30) * 100, 100) + "%;background:#1a1a1a'></div></div><p class='challenge-stat'>" + profile.currentStreak + " / 30</p></div>";
+      document.getElementById("challengesContent").innerHTML = html;
+    }
+
+    function updateUI() {
+      document.getElementById("userName").textContent = profile.name || "Guest";
+      document.getElementById("userLevel").textContent = profile.level !== null ? "Level: " + LEVELS[profile.level].name : "Level: Not selected";
+      document.getElementById("pointsValue").textContent = profile.totalPoints;
+      document.getElementById("booksValue").textContent = profile.booksRead;
+      document.getElementById("streakValue").textContent = profile.currentStreak;
+      document.querySelectorAll(".level-btn").forEach((btn, idx) => {
+        if (idx === profile.level) btn.classList.add("selected");
+        else btn.classList.remove("selected");
+      });
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>
