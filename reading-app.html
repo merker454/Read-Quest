@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading App - Track Your Reading Progress</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 500;
+    }
+    .header-info {
+      text-align: right;
+    }
+    .header-info p {
+      font-size: 14px;
+      margin: 0;
+      color: #666;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .stat-card {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #999;
+      font-weight: 400;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #1a1a1a;
+      color: white;
+      font-weight: 500;
+    }
+    .tab-content {
+      padding: 24px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #1a1a1a;
+      box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.1);
+    }
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .level-btn {
+      padding: 16px;
+      border: 1.5px solid #e5e5e5;
+      border-radius: 8px;
+      background: #f9f9f9;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a1a;
+      transition: all 0.2s;
+    }
+    .level-btn.selected {
+      border-color: #1a1a1a;
+      background: #1a1a1a;
+      color: white;
+    }
+    .level-subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+    .level-points {
+      font-size: 13px;
+      margin-top: 6px;
+      opacity: 0.9;
+    }
+    .add-book-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      margin-bottom: 24px;
+    }
+    .btn-primary {
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      background: #333;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #666;
+      border: 1px solid #e5e5e5;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .book-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .book-card {
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+    }
+    .book-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+    .book-title {
+      font-size: 15px;
+      font-weight: 500;
+      margin: 0;
+    }
+    .book-progress {
+      font-size: 13px;
+      color: #999;
+      margin: 4px 0 0;
+    }
+    .points-badge {
+      font-size: 12px;
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .progress-bar {
+      display: flex;
+      height: 6px;
+      background: #e5e5e5;
+      border-radius: 3px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1a1a1a;
+      transition: width 0.3s;
+    }
+    .button-group {
+      display: flex;
+      gap: 8px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    .empty-message {
+      text-align: center;
+      color: #999;
+      padding: 24px;
+    }
+    .achievement-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .achievement-card {
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      text-align: center;
+      opacity: 0.5;
+      transition: all 0.2s;
+    }
+    .achievement-card.unlocked {
+      background: #e8f5e9;
+      border-color: #c8e6c9;
+      opacity: 1;
+    }
+    .achievement-emoji {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+    .achievement-name {
+      font-size: 12px;
+      color: #999;
+      margin: 0;
+    }
+    .challenge-card {
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      margin-bottom: 12px;
+    }
+    .challenge-title {
+      font-size: 15px;
+      font-weight: 500;
+      margin: 0 0 8px;
+    }
+    .challenge-desc {
+      font-size: 14px;
+      color: #666;
+      margin: 0 0 12px;
+  }
+    .challenge-progress {
+      display: flex;
+      height: 8px;
+      background: #e5e5e5;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .challenge-stat {
+      font-size: 12px;
+      color: #999;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function ReadingApp() {
+      const LEVELS = [
+        { name: 'Early Reader', ages: '5-8', points: 5, color: '#7F77DD' },
+        { name: 'Junior', ages: '9-12', points: 8, color: '#1D9E75' },
+        { name: 'Teen', ages: '13-16', points: 10, color: '#D85A30' },
+        { name: 'Adult', ages: '17+', points: 12, color: '#185FA5' }
+      ];
+
+      const [profile, setProfile] = useState(() => {
+        const saved = localStorage.getItem('readingProfile');
+        return saved ? JSON.parse(saved) : { 
+          name: '', 
+          level: null, 
+          totalPoints: 0, 
+          booksRead: 0,
+          currentStreak: 0,
+          lastReadDate: null
+        };
+      });
+
+      const [books, setBooks] = useState(() => {
+        const saved = localStorage.getItem('readingBooks');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      const [achievements, setAchievements] = useState(() => {
+        const saved = localStorage.getItem('readingAchievements');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      const [tab, setTab] = useState('profile');
+      const [newBook, setNewBook] = useState({ title: '', chapters: '', currentChapter: 0 });
+
+      const allAchievements = [
+        { id: 'first100', name: '🚀 Century', desc: 'Earn 100 points', check: () => profile.totalPoints >= 100 },
+        { id: 'first500', name: '⭐ Milestone', desc: 'Earn 500 points', check: () => profile.totalPoints >= 500 },
+        { id: 'first1000', name: '🏆 Legend', desc: 'Earn 1000 points', check: () => profile.totalPoints >= 1000 },
+        { id: 'book1', name: '📖 Debut', desc: 'Complete 1 book', check: () => profile.booksRead >= 1 },
+        { id: 'book5', name: '📚 Collector', desc: 'Complete 5 books', check: () => profile.booksRead >= 5 },
+        { id: 'book10', name: '🎓 Scholar', desc: 'Complete 10 books', check: () => profile.booksRead >= 10 },
+        { id: 'streak7', name: '🔥 On Fire', desc: '7-day reading streak', check: () => profile.currentStreak >= 7 },
+        { id: 'streak30', name: '💪 Dedicated', desc: '30-day reading streak', check: () => profile.currentStreak >= 30 },
+      ];
+
+      useEffect(() => {
+        allAchievements.forEach(ach => {
+          if (ach.check() && !achievements.includes(ach.id)) {
+            setAchievements(prev => [...prev, ach.id]);
+          }
+        });
+      }, [profile.totalPoints, profile.booksRead, profile.currentStreak]);
+
+      useEffect(() => {
+        localStorage.setItem('readingProfile', JSON.stringify(profile));
+      }, [profile]);
+
+      useEffect(() => {
+        localStorage.setItem('readingBooks', JSON.stringify(books));
+      }, [books]);
+
+      useEffect(() => {
+        localStorage.setItem('readingAchievements', JSON.stringify(achievements));
+      }, [achievements]);
+
+      const logChapter = (bookIndex) => {
+        const book = books[bookIndex];
+        if (book.currentChapter < book.chapters) {
+          const updatedBooks = [...books];
+          updatedBooks[bookIndex].currentChapter += 1;
+          setBooks(updatedBooks);
+
+          const pointsPerChapter = LEVELS[profile.level].points;
+          const newPoints = profile.totalPoints + pointsPerChapter;
+          
+          const today = new Date().toDateString();
+          const lastDate = profile.lastReadDate ? new Date(profile.lastReadDate).toDateString() : null;
+          let newStreak = profile.currentStreak;
+          
+          if (lastDate !== today) {
+            if (lastDate === new Date(Date.now() - 86400000).toDateString()) {
+              newStreak += 1;
+            } else {
+              newStreak = 1;
+            }
+          }
+
+          setProfile(prev => ({
+            ...prev,
+            totalPoints: newPoints,
+            lastReadDate: today,
+            currentStreak: newStreak
+          }));
+        }
+      };
+
+      const completeBook = (bookIndex) => {
+        const updatedBooks = [...books];
+        updatedBooks[bookIndex].completed = true;
+        setBooks(updatedBooks);
+        setProfile(prev => ({ ...prev, booksRead: prev.booksRead + 1 }));
+      };
+
+      const addBook = () => {
+        if (newBook.title && newBook.chapters > 0) {
+          setBooks(prev => [...prev, {
+            id: Date.now(),
+            title: newBook.title,
+            chapters: parseInt(newBook.chapters),
+            currentChapter: 0,
+            completed: false,
+            dateAdded: new Date().toDateString()
+          }]);
+          setNewBook({ title: '', chapters: '', currentChapter: 0 });
+        }
+      };
+
+      const pointsPerChapter = profile.level !== null ? LEVELS[profile.level].points : 0;
+      const levelName = profile.level !== null ? LEVELS[profile.level].name : 'Not selected';
+
+      return (
+        <div className="container">
+          <div className="header">
+            <div className="header-top">
+              <h1>📖 Reader</h1>
+              <div className="header-info">
+                <p>{profile.name || 'Guest'}</p>
+                <p>Level: {levelName}</p>
+              </div>
+            </div>
+            <div className="stats">
+              <div className="stat-card">
+                <div className="stat-label">Points</div>
+                <div className="stat-value">{profile.totalPoints}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Books</div>
+                <div className="stat-value">{profile.booksRead}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Streak</div>
+                <div className="stat-value">{profile.currentStreak} 🔥</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="tabs">
+            {['profile', 'books', 'achievements', 'challenges'].map(t => (
+              <button
+                key={t}
+                className={`tab-btn ${tab === t ? 'active' : ''}`}
+                onClick={() => setTab(t)}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <div className="tab-content">
+            {tab === 'profile' && (
+              <div>
+                <div className="form-group">
+                  <label className="form-label">Your name</label>
+                  <input
+                    type="text"
+                    value={profile.name}
+                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your name"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Select your reading level</label>
+                  <div className="level-grid">
+                    {LEVELS.map((lv, idx) => (
+                      <button
+                        key={idx}
+                        className={`level-btn ${profile.level === idx ? 'selected' : ''}`}
+                        onClick={() => setProfile(prev => ({ ...prev, level: idx }))}
+                        style={profile.level === idx ? { borderColor: lv.color, backgroundColor: lv.color } : {}}
+                      >
+                        <div>{lv.name}</div>
+                        <div className="level-subtitle">Ages {lv.ages}</div>
+                        <div className="level-points">{lv.points} pts/ch</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === 'books' && (
+              <div>
+                {profile.level === null ? (
+                  <p className="empty-message">Select a reading level first</p>
+                ) : (
+                  <>
+                    <div className="add-book-form">
+                      <input
+                        type="text"
+                        value={newBook.title}
+                        onChange={(e) => setNewBook(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Book title"
+                      />
+                      <input
+                        type="number"
+                        value={newBook.chapters}
+                        onChange={(e) => setNewBook(prev => ({ ...prev, chapters: e.target.value }))}
+                        placeholder="Total chapters"
+                        min="1"
+                      />
+                      <button className="btn-primary" onClick={addBook}>Add book</button>
+                    </div>
+
+                    <div className="book-list">
+                      {books.length === 0 ? (
+                        <p className="empty-message">No books yet. Add one to start reading!</p>
+                      ) : (
+                        books.map((book, idx) => (
+                          <div key={book.id} className="book-card">
+                            <div className="book-header">
+                              <div>
+                                <h3 className="book-title">{book.title}</h3>
+                                <p className="book-progress">
+                                  {book.completed ? '✓ Completed' : `Ch ${book.currentChapter} / ${book.chapters}`}
+                                </p>
+                              </div>
+                              {!book.completed && (
+                                <span className="points-badge">+{pointsPerChapter} pts</span>
+                              )}
+                            </div>
+
+                            {!book.completed && (
+                              <>
+                                <div className="progress-bar">
+                                  <div className="progress-fill" style={{ width: `${(book.currentChapter / book.chapters) * 100}%` }}></div>
+                                </div>
+                                <div className="button-group">
+                                  <button className="btn-primary" onClick={() => logChapter(idx)}>Log chapter</button>
+                                  {book.currentChapter === book.chapters && (
+                                    <button className="btn-success" onClick={() => completeBook(idx)}>Finish book</button>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {tab === 'achievements' && (
+              <div className="achievement-grid">
+                {allAchievements.map(ach => (
+                  <div key={ach.id} className={`achievement-card ${achievements.includes(ach.id) ? 'unlocked' : ''}`}>
+                    <div className="achievement-emoji">{ach.name.split(' ')[0]}</div>
+                    <p className="achievement-name">{ach.desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {tab === 'challenges' && (
+              <div>
+                <div className="challenge-card">
+                  <h3 className="challenge-title">This week's challenge</h3>
+                  <p className="challenge-desc">Read 3 chapters</p>
+                  <div className="challenge-progress">
+                    <div style={{ width: `${Math.min((books.reduce((sum, b) => sum + b.currentChapter, 0) % 3) * 33, 100)}%`, backgroundColor: '#1a1a1a' }}></div>
+                  </div>
+                  <p className="challenge-stat">{Math.min(books.reduce((sum, b) => sum + b.currentChapter, 0) % 3, 3)} / 3</p>
+                </div>
+
+                <div className="challenge-card">
+                  <h3 className="challenge-title">This month's goal</h3>
+                  <p className="challenge-desc">Earn {profile.level !== null ? LEVELS[profile.level].points * 20 : '160'} points</p>
+                  <div className="challenge-progress">
+                    <div style={{ width: `${Math.min((profile.totalPoints / (profile.level !== null ? LEVELS[profile.level].points * 20 : 160)) * 100, 100)}%`, backgroundColor: '#1a1a1a' }}></div>
+                  </div>
+                  <p className="challenge-stat">{profile.totalPoints} / {profile.level !== null ? LEVELS[profile.level].points * 20 : '160'}</p>
+                </div>
+
+                <div className="challenge-card">
+                  <h3 className="challenge-title">Streak goal</h3>
+                  <p className="challenge-desc">Read for 30 days straight</p>
+                  <div className="challenge-progress">
+                    <div style={{ width: `${Math.min((profile.currentStreak / 30) * 100, 100)}%`, backgroundColor: '#1a1a1a' }}></div>
+                  </div>
+                  <p className="challenge-stat">{profile.currentStreak} / 30</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<ReadingApp />, document.getElementById('root'));
+  </script>
+</body>
+</html>
