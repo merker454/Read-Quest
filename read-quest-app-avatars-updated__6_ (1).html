@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#667eea">
+  <meta name="description" content="A gamified reading tracker app with quizzes, achievements, and challenges">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Read Quest">
+  <link rel="manifest" href="/Read-Quest/app/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%23667eea' width='192' height='192'/%3E%3Ctext x='50%' y='50%' font-size='120' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E">
+  <title>Read Quest - Track Your Reading Progress</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .profile-selector {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .profile-selector-label {
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0.9;
+    }
+    .profile-btn-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .profile-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+      transition: all 0.2s;
+      color: white;
+    }
+    .profile-btn.active {
+      background: white;
+      color: #667eea;
+      border-color: white;
+    }
+    .profile-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: rgba(255,255,255,0.2);
+    }
+    .profile-btn.active .profile-avatar {
+      background: #667eea;
+    }
+    .profile-actions {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      display: flex;
+      gap: 4px;
+    }
+    .profile-edit-btn, .profile-delete-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      color: white;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      line-height: 1;
+    }
+    .profile-edit-btn {
+      background: #2196F3;
+    }
+    .profile-delete-btn {
+      background: #ff4444;
+    }
+    .profile-btn-wrapper:hover .profile-edit-btn,
+    .profile-btn-wrapper:hover .profile-delete-btn {
+      display: flex;
+    }
+    .btn-new-profile {
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-new-profile:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e5e5;
+      background: linear-gradient(to bottom, #fafafa, white);
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      font-size: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f0f4ff 0%, #faf0ff 100%);
+      border: 2px solid #667eea;
+    }
+    .header h1 { font-size: 28px; font-weight: 700; color: #667eea; }
+    .header h1 span { color: #d32f2f; }
+    .header-info { text-align: right; }
+    .header-info p { font-size: 14px; margin: 0; color: #666; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .stat-card { background: linear-gradient(135deg, #f0f4ff 0%, #faf0ff 100%); padding: 12px; border-radius: 8px; border: 1px solid #e5e5e5; }
+    .stat-label { font-size: 12px; color: #999; margin-bottom: 4px; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #667eea; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e5e5;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #999;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 500; }
+    .tab-content { padding: 24px; display: none; }
+    .tab-content.active { display: block; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 14px; display: block; margin-bottom: 8px; font-weight: 500; color: #1a1a1a; }
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e5e5e5;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 20px;
+      padding-right: 35px;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    textarea { resize: vertical; min-height: 70px; }
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .avatar-option {
+      width: 100%;
+      aspect-ratio: 1;
+      border: 2px solid #e5e5e5;
+      border-radius: 12px;
+      background: #f9f9f9;
+      cursor: pointer;
+      font-size: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .avatar-option:hover {
+      border-color: #667eea;
+      transform: scale(1.05);
+    }
+    .avatar-option.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #f0f4ff 0%, #faf0ff 100%);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .level-btn {
+      padding: 16px;
+      border: 1.5px solid #e5e5e5;
+      border-radius: 8px;
+      background: #f9f9f9;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+    .level-btn.selected { border-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .level-subtitle { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+    .level-points { font-size: 13px; margin-top: 6px; opacity: 0.9; }
+    .book-selector-box {
+      background: linear-gradient(135deg, #f0f4ff 0%, #faf0ff 100%);
+      border: 2px solid #667eea;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .book-selector-box h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 16px;
+    }
+    .book-selector-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .book-selector-row select {
+      width: 100%;
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-add { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-add:hover { background: #bbdefb; }
+    .btn-quiz { background: #fce4ec; color: #c2185b; border: 1px solid #f8bbd0; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .add-book-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e5e5e5;
+      margin-bottom: 24px;
+    }
+    .add-book-form h3 {
+      margin: 0;
+      font-size: 14px;
+      color: #667eea;
+    }
+    .book-list { display: flex; flex-direction: column; gap: 12px; }
+    .book-card { padding: 12px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5; border-left: 4px solid #667eea; }
+    .book-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+    .book-title { font-size: 15px; font-weight: 500; margin: 0; }
+    .book-progress { font-size: 13px; color: #999; margin: 4px 0 0; }
+    .points-badge { font-size: 12px; background: #e3f2fd; color: #667eea; padding: 4px 8px; border-radius: 4px; }
+    .progress-bar { display: flex; height: 6px; background: #e5e5e5; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); }
+    .button-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .button-group button { flex: 1; min-width: 100px; }
+    .empty-message { text-align: center; color: #999; padding: 24px; }
+    .quiz-container { background: #f9f9f9; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; margin-bottom: 16px; }
+    .quiz-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #667eea; }
+    .question-card { background: white; padding: 16px; border-radius: 8px; border: 1px solid #e5e5e5; margin-bottom: 16px; }
+    .question-number { font-size: 12px; color: #999; margin-bottom: 8px; }
+    .question-text { font-size: 14px; font-weight: 500; margin-bottom: 12px; }
+    .option { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .option input[type="radio"], .option input[type="checkbox"] { cursor: pointer; }
+    .option label { cursor: pointer; flex: 1; }
+    .short-answer { width: 100%; padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 6px; }
+    .quiz-results { background: #e8f5e9; padding: 16px; border-radius: 8px; border: 1px solid #c8e6c9; margin-bottom: 16px; }
+    .results-score { font-size: 18px; font-weight: 600; color: #2e7d32; margin-bottom: 8px; }
+    .results-detail { font-size: 13px; color: #666; }
+    .achievement-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .achievement-card { padding: 12px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5; text-align: center; opacity: 0.5; }
+    .achievement-card.unlocked { background: #e8f5e9; border-color: #c8e6c9; opacity: 1; }
+    .achievement-emoji { font-size: 24px; margin-bottom: 6px; }
+    .achievement-name { font-size: 12px; color: #999; margin: 0; }
+    .challenge-card { padding: 16px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5; margin-bottom: 16px; }
+    .challenge-card.completed { background: #e8f5e9; border-color: #c8e6c9; }
+    .challenge-title { font-size: 16px; font-weight: 600; margin: 0 0 12px; color: #667eea; }
+    .challenge-desc { font-size: 14px; color: #666; margin: 0 0 12px; }
+    .challenge-progress { display: flex; height: 8px; background: #e5e5e5; border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
+    .challenge-stat { font-size: 13px; color: #666; margin-bottom: 12px; font-weight: 500; }
+    .reward-section { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); padding: 12px; border-radius: 8px; border: 1px solid #ffcc80; margin-top: 12px; }
+    .reward-section h4 { font-size: 13px; font-weight: 600; color: #e65100; margin: 0 0 8px; }
+    .reward-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .reward-option { padding: 10px; background: white; border: 1.5px solid #ffcc80; border-radius: 6px; cursor: pointer; text-align: center; font-size: 12px; font-weight: 500; color: #e65100; transition: all 0.2s; }
+    .reward-option:hover { background: #fff9c4; border-color: #ff9800; transform: scale(1.05); }
+    .reward-option.selected { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border-color: #f57c00; }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .modal.active {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      margin-top: 20px;
+    }
+    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #667eea; }
+    .modal-close {
+      float: right;
+      cursor: pointer;
+      font-size: 24px;
+      color: #999;
+    }
+    .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+    .modal-buttons button { flex: 1; }
+    .btn-secondary { background: #e5e5e5; color: #1a1a1a; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .btn-secondary:hover { opacity: 0.8; }
+    
+    /* Footer Styles */
+    .app-footer {
+      background: #1a1a1a;
+      color: #999;
+      padding: 40px 20px 20px;
+      margin-top: 60px;
+      border-top: 1px solid #333;
+      font-size: 13px;
+    }
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid #333;
+    }
+    .footer-section h4 {
+      color: #667eea;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      letter-spacing: 0.5px;
+    }
+    .footer-section ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .footer-section li {
+      margin-bottom: 10px;
+    }
+    .footer-section a {
+      color: #999;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      cursor: pointer;
+    }
+    .footer-section a:hover {
+      color: #667eea;
+    }
+    .footer-bottom {
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+    }
+
+    /* Legal Modal Styles */
+    .modal-content-legal {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      animation: slideUp 0.3s ease;
+    }
+    .modal-content-legal h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 28px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 15px;
+    }
+    .modal-content-legal h3 {
+      color: #333;
+      margin-top: 25px;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .modal-content-legal p {
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    .modal-content-legal ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: #555;
+    }
+    .modal-content-legal li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .modal-content-legal strong {
+      color: #333;
+    }
+    
+    /* Modal backdrop animation */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive footer */
+    @media (max-width: 768px) {
+      .app-footer {
+        padding: 30px 15px 15px;
+      }
+      .footer-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .modal-content-legal {
+        padding: 30px 20px;
+        margin: 20px;
+      }
+      .modal-content-legal h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="profile-selector">
+      <span class="profile-selector-label">Reader:</span>
+      <div id="profileButtons" style="display:flex;gap:8px;flex:1;overflow-x:auto"></div>
+      <button class="btn-new-profile" onclick="showNewProfileModal()">+ New</button>
+    </div>
+
+    <div class="header">
+      <div class="header-top">
+        <div class="header-left">
+          <div class="header-avatar" id="headerAvatar">😊</div>
+          <div>
+            <h1>Read<span>Quest</span></h1>
+            <p id="userLevel">Level: Not selected</p>
+          </div>
+        </div>
+        <div class="header-info">
+          <p id="userName">Guest</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Points</div>
+          <div class="stat-value" id="pointsValue">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Books</div>
+          <div class="stat-value" id="booksValue">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Streak</div>
+          <div class="stat-value" id="streakValue">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('profile')">Profile</button>
+      <button class="tab-btn" onclick="switchTab('books')">Books</button>
+      <button class="tab-btn" onclick="switchTab('recommendations')">Recommendations</button>
+      <button class="tab-btn" onclick="switchTab('achievements')">Achievements</button>
+      <button class="tab-btn" onclick="switchTab('challenges')">Challenges</button>
+    </div>
+
+    <div class="tab-content active" id="tab-profile">
+      <div class="form-group">
+        <label class="form-label">Your name</label>
+        <input type="text" id="profileName" placeholder="Enter your name" onchange="updateProfile()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select your reading level</label>
+        <div class="level-grid">
+          <button class="level-btn" onclick="selectLevel(0)"><div>Early Reader</div><div class="level-subtitle">K-5</div><div class="level-points">5 pts/ch</div></button>
+          <button class="level-btn" onclick="selectLevel(1)"><div>Junior</div><div class="level-subtitle">6-9</div><div class="level-points">8 pts/ch</div></button>
+          <button class="level-btn" onclick="selectLevel(2)"><div>Teen</div><div class="level-subtitle">9-12</div><div class="level-points">10 pts/ch</div></button>
+          <button class="level-btn" onclick="selectLevel(3)"><div>Adult</div><div class="level-subtitle">17+</div><div class="level-points">12 pts/ch</div></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-books">
+      <div id="bookContent"></div>
+    </div>
+
+    <div class="tab-content" id="tab-recommendations">
+      <div id="recContent"></div>
+    </div>
+
+    <div class="tab-content" id="tab-achievements">
+      <div class="achievement-grid" id="achievementsGrid"></div>
+    </div>
+
+    <div class="tab-content" id="tab-challenges">
+      <div id="challengesContent"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="newProfileModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="hideNewProfileModal()">&times;</span>
+      <div class="modal-title">Create New Reader</div>
+      <div class="form-group">
+        <label class="form-label">Reader name</label>
+        <input type="text" id="newProfileName" placeholder="Enter name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Choose an avatar</label>
+        <div class="avatar-grid" id="avatarGrid"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="hideNewProfileModal()">Cancel</button>
+        <button class="btn-primary" onclick="createNewProfile()">Create reader</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editProfileModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="hideEditProfileModal()">&times;</span>
+      <div class="modal-title">Edit Reader</div>
+      <div class="form-group">
+        <label class="form-label">Reader name</label>
+        <input type="text" id="editProfileName" placeholder="Enter name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Choose an avatar</label>
+        <div class="avatar-grid" id="editAvatarGrid"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reading level</label>
+        <div class="level-grid" id="editLevelGrid"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="hideEditProfileModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveEditedProfile()">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="quizModal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeQuiz()">&times;</span>
+      <div class="quiz-title" id="quizTitle"></div>
+      <div id="quizContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // Version: 2.1 - Updated with book dropdowns and rewards
+    console.log('Read Quest App v2.1 Loaded');
+    
+    const AVATARS = ['😊', '🤓', '😎', '🥰', '😌', '🤗', '😄', '🎉'];
+    const LEVELS = [
+      { name: "Early Reader", grade: "K-5", points: 5 },
+      { name: "Junior", grade: "6-9", points: 8 },
+      { name: "Teen", grade: "9-12", points: 10 },
+      { name: "Adult", grade: "17+", points: 12 }
+    ];
+
+    const REWARDS = [
+      { id: 'gold-badge', name: '🏆 Gold Badge', icon: '🏆' },
+      { id: 'trophy', name: '🥇 Trophy', icon: '🥇' },
+      { id: 'star', name: '⭐ Shiny Star', icon: '⭐' },
+      { id: 'gem', name: '💎 Gem', icon: '💎' },
+      { id: 'ribbon', name: '🎀 Ribbon', icon: '🎀' },
+      { id: 'medal', name: '🥈 Medal', icon: '🥈' }
+    ];
+
+    // SAMPLE QUIZZES DATABASE - 5 quizzes for demonstration
+    const SAMPLE_QUIZZES = {
+      "Charlotte's Web": {
+        title: "Charlotte's Web",
+        author: "E.B. White",
+        level: 0,
+        questions: [
+          { type: "mc", question: "What kind of animal is Wilbur?", options: ["A sheep", "A pig", "A horse", "A duck"], correct: 1, explanation: "Wilbur is a pig who lives in Farmer John's barn." },
+          { type: "tf", question: "Charlotte is a spider.", correct: true, explanation: "Yes! Charlotte is a spider who becomes Wilbur's best friend." },
+          { type: "mc", question: "What does Charlotte write in her web?", options: ["Good pig", "Some Pig", "Clever Pig", "Special Pig"], correct: 1, explanation: "Charlotte writes 'Some Pig' to convince the farmer that Wilbur is special." },
+          { type: "tf", question: "Templeton is a mouse.", correct: false, explanation: "Templeton is a rat who helps Charlotte and Wilbur throughout the story." },
+          { type: "mc", question: "Why does Charlotte help Wilbur?", options: ["She wants food", "She becomes his friend", "She's forced to", "She's paid to"], correct: 1, explanation: "Charlotte genuinely cares about Wilbur and saves him from danger." }
+        ]
+      },
+      "Percy Jackson and the Olympians: The Lightning Thief": {
+        title: "Percy Jackson and the Olympians: The Lightning Thief",
+        author: "Rick Riordan",
+        level: 1,
+        questions: [
+          { type: "mc", question: "Who is Percy Jackson's father?", options: ["Zeus", "Poseidon", "Hades", "Ares"], correct: 1, explanation: "Percy discovers he's the son of Poseidon, god of the sea." },
+          { type: "tf", question: "Annabeth is a daughter of Athena.", correct: true, explanation: "Annabeth is a daughter of Athena, goddess of wisdom and strategy." },
+          { type: "mc", question: "What is Percy's magical weapon?", options: ["A sword", "A magical pen that becomes a sword", "A bow", "A trident"], correct: 1, explanation: "Percy's pen, Riptide, is a magical pen that transforms into a sword." },
+          { type: "mc", question: "Who stole Zeus's lightning bolt?", options: ["Ares", "Kronos's forces", "A secret thief", "Hades"], correct: 2, explanation: "Luke Castellan stole the bolt on the orders of Kronos, an ancient Titan." },
+          { type: "tf", question: "Percy can breathe underwater.", correct: true, explanation: "As a son of Poseidon, Percy has the ability to breathe and survive underwater." }
+        ]
+      },
+      "Six of Crows": {
+        title: "Six of Crows",
+        author: "Leigh Bardugo",
+        level: 2,
+        questions: [
+          { type: "mc", question: "What is Kaz Brekker's main goal?", options: ["To escape Ketterdam", "To pull off an impossible heist", "To become a merchant", "To find treasure"], correct: 1, explanation: "Kaz leads his crew to break into the Ice Court, a seemingly impossible task." },
+          { type: "mc", question: "Which of the Six is a Grisha?", options: ["Kaz", "Inej", "Matthias", "Both Jesper and Matthias"], correct: 2, explanation: "Matthias (though conflicted) and the crew members like Nina have connections to Grisha powers." },
+          { type: "tf", question: "Inej was born free.", correct: false, explanation: "Inej was enslaved in the Menagerie before Kaz freed her." },
+          { type: "mc", question: "What is Nina famous for loving?", options: ["Money", "Waffles", "Books", "Magic"], correct: 1, explanation: "Nina's love of waffles is one of her most memorable character traits!" },
+          { type: "tf", question: "The crew successfully pulls off their heist completely.", correct: true, explanation: "Despite all odds, the crew manages to carry out their mission at the Ice Court." }
+        ]
+      },
+      "Dune": {
+        title: "Dune",
+        author: "Frank Herbert",
+        level: 3,
+        questions: [
+          { type: "mc", question: "What is Melange (Spice)?", options: ["A common mineral", "The most valuable substance in the universe", "A type of food", "A planet"], correct: 1, explanation: "Spice is rare, found on Arrakis, and essential for space travel and extending lifespan." },
+          { type: "mc", question: "Who is Paul Atreides's mother?", options: ["Princess Irulan", "Lady Jessica", "The Reverend Mother", "Chani"], correct: 1, explanation: "Lady Jessica is Paul's mother and a trained Bene Gesserit." },
+          { type: "tf", question: "Arrakis is a lush, green planet.", correct: false, explanation: "Arrakis is a harsh desert planet with extreme conditions." },
+          { type: "mc", question: "What is the Fremen's connection to Arrakis?", options: ["They are visitors", "They are native inhabitants who thrive in the desert", "They work for the Empire", "They are merchants"], correct: 1, explanation: "The Fremen are the native people of Arrakis, adapted to survive the desert." },
+          { type: "tf", question: "Baron Harkonnen is Paul's enemy.", correct: true, explanation: "The Baron Harkonnen opposes Paul and seeks to control the spice trade." }
+        ]
+      },
+      "Wings of Fire: The Dragonet Prophecy": {
+        title: "Wings of Fire: The Dragonet Prophecy",
+        author: "Tui T. Sutherland",
+        level: 0,
+        questions: [
+          { type: "mc", question: "What color is Clay the dragon?", options: ["Gold", "Green", "Blue", "Purple"], correct: 0, explanation: "Clay is a MudWing with golden-brown coloring." },
+          { type: "tf", question: "Starflight is a SkyWing.", correct: false, explanation: "Starflight is a NightWing, known for their dark scales and intelligence." },
+          { type: "mc", question: "What is the prophecy about?", options: ["A treasure", "Five dragonets that could end a war", "A flying competition", "Finding gold"], correct: 1, explanation: "The prophecy foretells that five dragonets will stop the ongoing dragon war." },
+          { type: "mc", question: "Which dragon breathes fire and water?", options: ["Clay", "Tsunami", "Glory", "Sunny"], correct: 0, explanation: "Clay, as a MudWing, has unique abilities. Tsunami, the SeaWing, breathes underwater." },
+          { type: "tf", question: "Sunny is the smallest dragonet.", correct: true, explanation: "Sunny is a SandWing and is notably the smallest of the five dragonets." }
+        ]
+      }
+    };
+
+    const RECOMMENDATIONS = {
+      0: [
+        { title: "Jennifer Chan Is Not Alone", author: "Tae Keller", chapters: 28 },
+        { title: "Weird Sad and Silent", author: "Alison McGhee", chapters: 28 },
+        { title: "The Door of No Return", author: "Kwame Alexander", chapters: 28 },
+        { title: "The Last Cuentista", author: "Donna Barba Higuera", chapters: 28 },
+        { title: "When You Reach Me", author: "Rebecca Stead", chapters: 28 },
+        { title: "Small Spaces", author: "Katherine Arden", chapters: 28 },
+        { title: "The Call Of The Wild", author: "Jack London", chapters: 28 },
+        { title: "Holes", author: "Louis Sachar", chapters: 28 },
+        { title: "Walk Two Moons", author: "Sharon Creech", chapters: 28 },
+        { title: "Black Beauty", author: "Anna Sewell", chapters: 28 },
+        { title: "Space Case", author: "Stuart Gibbs", chapters: 28 },
+        { title: "My Side of the Mountain", author: "Jean Craighead George", chapters: 28 },
+        { title: "Out of My Mind", author: "Sharon M Draper", chapters: 28 },
+        { title: "Ground Zero", author: "Alan Gratz", chapters: 28 },
+        { title: "Tiger Eyes", author: "Judy Blume", chapters: 28 },
+        { title: "The Secret Garden", author: "Frances Hodgson Burnett", chapters: 28 },
+        { title: "The Dark is Rising", author: "Susan Cooper", chapters: 28 },
+        { title: "Princess Academy", author: "Shannon Hale", chapters: 28 },
+        { title: "Island of the Blue Dolphins", author: "Scott O'Dell", chapters: 28 },
+        { title: "Chains", author: "Laurie Halse Anderson", chapters: 28 },
+        { title: "Brown Girl Dreaming", author: "Jacqueline Woodson", chapters: 28 },
+        { title: "Ghost", author: "Jason Reynolds", chapters: 28 },
+        { title: "The Graveyard Book", author: "Neil Gaiman", chapters: 28 },
+        { title: "Wolf Hollow", author: "Lauren Wolk", chapters: 28 },
+        { title: "The Sign of the Beaver", author: "Elizabeth George Speare", chapters: 28 },
+        { title: "Shiloh", author: "Phyllis Reynolds Naylor", chapters: 28 },
+        { title: "The Giver", author: "Lois Lowry", chapters: 28 },
+        { title: "Tuck Everlasting", author: "Natalie Babbitt", chapters: 28 },
+        { title: "Watership Down", author: "Richard Adams", chapters: 28 },
+        { title: "Percy Jackson and the Olympians", author: "Rick Riordan", chapters: 28 }
+      ],
+      1: [
+        { title: "Amal Unbound", author: "Aisha Saeed", chapters: 28 },
+        { title: "The Glass Town Game", author: "Catherynne M. Valente", chapters: 28 },
+        { title: "Small Town Pride", author: "Phil Stamper", chapters: 28 },
+        { title: "New Kid", author: "Jerry Craft", chapters: 28 },
+        { title: "A Place to Belong", author: "Cynthia Lord", chapters: 28 },
+        { title: "The Westing Game", author: "Ellen Raskin", chapters: 28 },
+        { title: "The Wednesday Wars", author: "Gary D Schmidt", chapters: 28 },
+        { title: "The Crossover", author: "Kwame Alexander", chapters: 28 },
+        { title: "Touching Spirit Bear", author: "Ben Mikaelsen", chapters: 28 },
+        { title: "The Book Thief", author: "Markus Zusak", chapters: 28 },
+        { title: "The Girl Who Drank the Moon", author: "Kelly Barnhill", chapters: 28 },
+        { title: "Where the Red Fern Grows", author: "Wilson Rawls", chapters: 28 },
+        { title: "Orbiting Jupiter", author: "Gary D Schmidt", chapters: 28 },
+        { title: "The Land of Stories", author: "Chris Colfer", chapters: 28 },
+        { title: "Sea of Trolls", author: "Nancy Farmer", chapters: 28 },
+        { title: "The Pigman", author: "Paul Zindel", chapters: 28 },
+        { title: "Nothing but the Truth", author: "Avi", chapters: 28 },
+        { title: "Redwall", author: "Brian Jacques", chapters: 28 },
+        { title: "The Maze Runner", author: "James Dashner", chapters: 28 },
+        { title: "The Hobbit", author: "J.R.R. Tolkien", chapters: 28 },
+        { title: "Wings of Fire", author: "Tui T. Sutherland", chapters: 28 },
+        { title: "The Hunger Games", author: "Suzanne Collins", chapters: 28 },
+        { title: "Six of Crows", author: "Leigh Bardugo", chapters: 28 },
+        { title: "Starfish", author: "Lisa Fipps", chapters: 28 },
+        { title: "Displaced", author: "Patrick Ochieng", chapters: 28 },
+        { title: "Harry Potter", author: "J.K. Rowling", chapters: 28 },
+        { title: "Shiloh", author: "Phyllis Reynolds Naylor", chapters: 28 },
+        { title: "The Giver", author: "Lois Lowry", chapters: 28 },
+        { title: "Tuck Everlasting", author: "Natalie Babbitt", chapters: 28 },
+        { title: "Percy Jackson", author: "Rick Riordan", chapters: 28 }
+      ],
+      2: [
+        { title: "Gaslit", author: "Megan Davidhizar", chapters: 35 },
+        { title: "In the Wild Light", author: "Jeff Zentner", chapters: 35 },
+        { title: "They Both Die at the End", author: "Adam Silvera", chapters: 35 },
+        { title: "Nothing", author: "Janne Teller", chapters: 35 },
+        { title: "Lord of the Flies", author: "William Golding", chapters: 35 },
+        { title: "Long Way Down", author: "Jason Reynolds", chapters: 35 },
+        { title: "Brave New World", author: "Aldous Huxley", chapters: 35 },
+        { title: "To Kill a Mockingbird", author: "Harper Lee", chapters: 35 },
+        { title: "The Catcher in the Rye", author: "J.D. Salinger", chapters: 35 },
+        { title: "Looking for Alaska", author: "John Green", chapters: 35 },
+        { title: "Monster", author: "Walter Dean Myers", chapters: 35 },
+        { title: "The Red Queen", author: "Victoria Aveyard", chapters: 35 },
+        { title: "Of Mice and Men", author: "John Steinbeck", chapters: 35 },
+        { title: "Every Day", author: "David Levithan", chapters: 35 },
+        { title: "American Born Chinese", author: "Gene Luen Yang", chapters: 35 },
+        { title: "March", author: "John Lewis", chapters: 35 },
+        { title: "The Serpent King", author: "Jeff Zentner", chapters: 35 },
+        { title: "I Am the Messenger", author: "Markus Zusak", chapters: 35 },
+        { title: "Shadowmancer", author: "G.P. Taylor", chapters: 35 },
+        { title: "This One Summer", author: "Mariko Tamaki", chapters: 35 },
+        { title: "The Hound of the Baskervilles", author: "Arthur Conan Doyle", chapters: 35 },
+        { title: "Firebird", author: "Elizabeth Wein", chapters: 35 },
+        { title: "The House of the Scorpion", author: "Nancy Farmer", chapters: 35 },
+        { title: "Slaughterhouse-Five", author: "Kurt Vonnegut", chapters: 35 },
+        { title: "The Yearling", author: "Marjorie Kinnan Rawlings", chapters: 35 },
+        { title: "The Sun Is Also a Star", author: "Nicola Yoon", chapters: 35 },
+        { title: "The Odyssey", author: "Homer", chapters: 35 },
+        { title: "One of Us Is Lying", author: "Karen M. McManus", chapters: 35 },
+        { title: "Dragon Hoops", author: "Gene Luen Yang", chapters: 35 },
+        { title: "The Monstrumologist", author: "Rick Yancey", chapters: 35 },
+        { title: "Out of the Dust", author: "Karen Hesse", chapters: 35 },
+        { title: "Invisible Man", author: "Ralph Ellison", chapters: 35 },
+        { title: "Robinson Crusoe", author: "Daniel Defoe", chapters: 35 },
+        { title: "Animal Farm", author: "George Orwell", chapters: 35 },
+        { title: "The Absolutely True Diary of a Part-Time Indian", author: "Sherman Alexie", chapters: 35 },
+        { title: "Diary of a Young Girl", author: "Anne Frank", chapters: 35 },
+        { title: "Daughter of Smoke and Bone", author: "Laini Taylor", chapters: 35 },
+        { title: "Life of Pi", author: "Yann Martel", chapters: 35 },
+        { title: "Twilight", author: "Stephenie Meyer", chapters: 35 },
+        { title: "Nimona", author: "ND Stevenson", chapters: 35 }
+      ],
+      3: [
+        { title: "Pride and Prejudice", author: "Jane Austen", chapters: 40 },
+        { title: "To Kill a Mockingbird", author: "Harper Lee", chapters: 40 },
+        { title: "The Great Gatsby", author: "F. Scott Fitzgerald", chapters: 40 },
+        { title: "Madonna in a Fur Coat", author: "Sabahattin Ali", chapters: 40 },
+        { title: "In Cold Blood", author: "Truman Capote", chapters: 40 },
+        { title: "Wide Sargasso Sea", author: "Jean Rhys", chapters: 40 },
+        { title: "Brave New World", author: "Aldous Huxley", chapters: 40 },
+        { title: "I Capture The Castle", author: "Dodie Smith", chapters: 40 },
+        { title: "Jane Eyre", author: "Charlotte Bronte", chapters: 40 },
+        { title: "Crime and Punishment", author: "Fyodor Dostoevsky", chapters: 40 },
+        { title: "The Turn of the Screw", author: "Henry James", chapters: 40 },
+        { title: "The Secret History", author: "Donna Tartt", chapters: 40 },
+        { title: "The Call of the Wild", author: "Jack London", chapters: 40 },
+        { title: "Persuasion", author: "Jane Austen", chapters: 40 },
+        { title: "Les Miserables", author: "Victor Hugo", chapters: 40 },
+        { title: "Moby-Dick", author: "Herman Melville", chapters: 40 },
+        { title: "To the Lighthouse", author: "Virginia Woolf", chapters: 40 },
+        { title: "The Death of the Heart", author: "Elizabeth Bowen", chapters: 40 },
+        { title: "Frankenstein", author: "Mary Shelley", chapters: 40 },
+        { title: "The Master and Margarita", author: "Mikhail Bulgakov", chapters: 40 },
+        { title: "The Go-Between", author: "L. P. Hartley", chapters: 40 },
+        { title: "One Flew Over the Cuckoo's Nest", author: "Ken Kesey", chapters: 40 },
+        { title: "Nineteen Eighty-Four", author: "George Orwell", chapters: 40 },
+        { title: "The Catcher in the Rye", author: "J.D. Salinger", chapters: 40 },
+        { title: "Beloved", author: "Toni Morrison", chapters: 40 },
+        { title: "The Code of the Woosters", author: "P. G. Wodehouse", chapters: 40 },
+        { title: "Dracula", author: "Bram Stoker", chapters: 40 },
+        { title: "The Outsiders", author: "S. E. Hinton", chapters: 40 },
+        { title: "The Chrysalids", author: "John Wyndham", chapters: 40 },
+        { title: "War and Peace", author: "Leo Tolstoy", chapters: 40 },
+        { title: "Great Expectations", author: "Charles Dickens", chapters: 40 },
+        { title: "Another Country", author: "James Baldwin", chapters: 40 },
+        { title: "Catch-22", author: "Joseph Heller", chapters: 40 },
+        { title: "The Age of Innocence", author: "Edith Wharton", chapters: 40 },
+        { title: "Things Fall Apart", author: "Chinua Achebe", chapters: 40 },
+        { title: "Middlemarch", author: "George Eliot", chapters: 40 },
+        { title: "Rebecca", author: "Daphne du Maurier", chapters: 40 },
+        { title: "Tess of the d'Urbervilles", author: "Thomas Hardy", chapters: 40 },
+        { title: "Vanity Fair", author: "William Makepeace Thackeray", chapters: 40 },
+        { title: "Brideshead Revisited", author: "Evelyn Waugh", chapters: 40 },
+        { title: "Madame Bovary", author: "Gustave Flaubert", chapters: 40 },
+        { title: "The Mill on the Floss", author: "George Eliot", chapters: 40 },
+        { title: "Barchester Towers", author: "Anthony Trollope", chapters: 40 },
+        { title: "Lady Chatterley's Lover", author: "D.H Lawrence", chapters: 40 },
+        { title: "The Count of Monte Cristo", author: "Alexandre Dumas", chapters: 40 },
+        { title: "The Grapes of Wrath", author: "John Steinbeck", chapters: 40 },
+        { title: "Ulysses", author: "James Joyce", chapters: 40 },
+        { title: "East of Eden", author: "John Steinbeck", chapters: 40 },
+        { title: "The Lord of the Rings", author: "J. R. R. Tolkien", chapters: 40 },
+        { title: "The Brothers Karamazov", author: "Fyodor Dostoyevsky", chapters: 40 },
+        { title: "Buddenbrooks", author: "Thomas Mann", chapters: 40 },
+        { title: "Lolita", author: "Vladimir Nabokov", chapters: 40 },
+        { title: "Scoop", author: "Evelyn Waugh", chapters: 40 },
+        { title: "Love in a Cold Climate", author: "Nancy Mitford", chapters: 40 },
+        { title: "A Tale of Two Cities", author: "Charles Dickens", chapters: 40 },
+        { title: "Diary of a Nobody", author: "George Grossmith and Weedon Grossmith", chapters: 40 },
+        { title: "Anna Karenina", author: "Leo Tolstoy", chapters: 40 },
+        { title: "The Betrothed", author: "Alessandro Manzoni", chapters: 40 },
+        { title: "Orlando", author: "Virginia Woolf", chapters: 40 },
+        { title: "Atlas Shrugged", author: "Ayn Rand", chapters: 40 },
+        { title: "The Time Machine", author: "H. G. Wells", chapters: 40 },
+        { title: "The Forsyte Saga", author: "John Galsworthy", chapters: 40 },
+        { title: "Travels with Charley", author: "John Steinbeck", chapters: 40 },
+        { title: "Tropic of Cancer", author: "Henry Miller", chapters: 40 },
+        { title: "Don Quixote", author: "Miguel Cervantes", chapters: 40 },
+        { title: "Staying On", author: "Paul Scott", chapters: 40 },
+        { title: "The Quiet American", author: "Graham Greene", chapters: 40 },
+        { title: "The Adventures of Huckleberry Finn", author: "Mark Twain", chapters: 40 },
+        { title: "Of Human Bondage", author: "Somerset Maugham", chapters: 40 },
+        { title: "Bleak House", author: "Charles Dickens", chapters: 40 },
+        { title: "Sense and Sensibility", author: "Jane Austen", chapters: 40 },
+        { title: "The Picture of Dorian Gray", author: "Oscar Wilde", chapters: 40 },
+        { title: "A Christmas Carol", author: "Charles Dickens", chapters: 40 },
+        { title: "Silas Marner", author: "George Eliot", chapters: 40 },
+        { title: "Mrs Dalloway", author: "Virginia Woolf", chapters: 40 },
+        { title: "Little Women", author: "Louisa May Alcott", chapters: 40 },
+        { title: "The Sea, The Sea", author: "Iris Murdoch", chapters: 40 },
+        { title: "David Copperfield", author: "Charles Dickens", chapters: 40 },
+        { title: "The Castle", author: "Franz Kafka", chapters: 40 },
+        { title: "I, Claudius", author: "Robert Graves", chapters: 40 },
+        { title: "I Know Why the Caged Bird Sings", author: "Maya Angelou", chapters: 40 },
+        { title: "A Confederacy of Dunces", author: "John Kennedy Toole", chapters: 40 },
+        { title: "The Razor's Edge", author: "W. Somerset Maugham", chapters: 40 },
+        { title: "Lark Rise to Candleford", author: "Flora Thompson", chapters: 40 },
+        { title: "The Return of the Native", author: "Thomas Hardy", chapters: 40 },
+        { title: "A Portrait of the Artist as a Young Man", author: "James Joyce", chapters: 40 },
+        { title: "Heart of Darkness", author: "Joseph Conrad", chapters: 40 },
+        { title: "North and South", author: "Elizabeth Gaskell", chapters: 40 },
+        { title: "The Handmaid's Tale", author: "Margaret Atwood", chapters: 40 },
+        { title: "Giovanni's Room", author: "James Baldwin", chapters: 40 },
+        { title: "The Godfather", author: "Mario Puzo", chapters: 40 },
+        { title: "The Woman in White", author: "Wilkie Collins", chapters: 40 },
+        { title: "One Day in the Life of Ivan Denisovich", author: "Alexander Solzhenitsyn", chapters: 40 },
+        { title: "White Nights", author: "Fyodor Dostoyevsky", chapters: 40 },
+        { title: "Hard Times", author: "Charles Dickens", chapters: 40 }
+      ]
+    };
+
+    let allProfiles = JSON.parse(localStorage.getItem("allProfiles")) || [];
+    let currentProfileId = localStorage.getItem("currentProfileId");
+    let selectedAvatar = '😊';
+    let editingProfileId = null;
+    let editingAvatar = '😊';
+    let currentQuiz = null;
+
+    if (allProfiles.length === 0) {
+      allProfiles.push({
+        id: Date.now(),
+        name: "Reader 1",
+        avatar: '😊',
+        level: null,
+        totalPoints: 0,
+        booksRead: 0,
+        currentStreak: 0,
+        lastReadDate: null,
+        books: [],
+        achievements: [],
+        prizes: { weekly: "", monthly: "", streak: "" }
+      });
+      currentProfileId = allProfiles[0].id;
+    }
+    if (!currentProfileId) currentProfileId = allProfiles[0].id;
+
+    function getCurrentProfile() {
+      return allProfiles.find(p => p.id === parseInt(currentProfileId));
+    }
+
+    function save() {
+      localStorage.setItem("allProfiles", JSON.stringify(allProfiles));
+      localStorage.setItem("currentProfileId", currentProfileId);
+      updateUI();
+    }
+
+    function switchProfile(profileId) {
+      currentProfileId = profileId;
+      save();
+      renderProfileButtons();
+    }
+
+    function showEditProfileModal(profileId, event) {
+      event.stopPropagation();
+      editingProfileId = profileId;
+      const profile = allProfiles.find(p => p.id === profileId);
+      editingAvatar = profile.avatar;
+      document.getElementById("editProfileName").value = profile.name;
+      renderEditAvatarGrid();
+      renderEditLevelGrid(profile.level);
+      document.getElementById("editProfileModal").classList.add("active");
+    }
+
+    function hideEditProfileModal() {
+      document.getElementById("editProfileModal").classList.remove("active");
+      editingProfileId = null;
+    }
+
+    function renderEditAvatarGrid() {
+      let html = "";
+      AVATARS.forEach(avatar => {
+        html += "<div class='avatar-option " + (avatar === editingAvatar ? "selected" : "") + "' onclick='selectEditAvatar(\"" + avatar + "\")'>" + avatar + "</div>";
+      });
+      document.getElementById("editAvatarGrid").innerHTML = html;
+    }
+
+    function selectEditAvatar(avatar) {
+      editingAvatar = avatar;
+      renderEditAvatarGrid();
+    }
+
+    function renderEditLevelGrid(currentLevel) {
+      let html = "";
+      LEVELS.forEach((level, idx) => {
+        html += "<button class='level-btn " + (idx === currentLevel ? "selected" : "") + "' onclick='selectEditLevel(" + idx + ")'><div>" + level.name + "</div><div class='level-subtitle'>" + level.grade + "</div><div class='level-points'>" + level.points + " pts/ch</div></button>";
+      });
+      document.getElementById("editLevelGrid").innerHTML = html;
+    }
+
+    function selectEditLevel(idx) {
+      const profile = allProfiles.find(p => p.id === editingProfileId);
+      profile.level = idx;
+      renderEditLevelGrid(idx);
+    }
+
+    function saveEditedProfile() {
+      const profile = allProfiles.find(p => p.id === editingProfileId);
+      const newName = document.getElementById("editProfileName").value.trim();
+      if (newName) {
+        profile.name = newName;
+        profile.avatar = editingAvatar;
+        save();
+        renderProfileButtons();
+        hideEditProfileModal();
+      }
+    }
+
+    function deleteProfile(profileId, event) {
+      event.stopPropagation();
+      if (allProfiles.length <= 1) {
+        alert("You must have at least one reader!");
+        return;
+      }
+      if (confirm("Delete this reader? This cannot be undone.")) {
+        allProfiles = allProfiles.filter(p => p.id !== profileId);
+        if (parseInt(currentProfileId) === profileId) {
+          currentProfileId = allProfiles[0].id;
+        }
+        save();
+        renderProfileButtons();
+      }
+    }
+
+    function renderProfileButtons() {
+      let html = "";
+      allProfiles.forEach(profile => {
+        html += "<div class='profile-btn-wrapper'><button class='profile-btn " + (parseInt(currentProfileId) === profile.id ? "active" : "") + "' onclick='switchProfile(" + profile.id + ")'><div class='profile-avatar'>" + (profile.avatar || '😊') + "</div><div>" + profile.name + "</div></button><div class='profile-actions'><button class='profile-edit-btn' onclick='showEditProfileModal(" + profile.id + ", event)'>✎</button><button class='profile-delete-btn' onclick='deleteProfile(" + profile.id + ", event)'>×</button></div></div>";
+      });
+      document.getElementById("profileButtons").innerHTML = html;
+    }
+
+    function showNewProfileModal() {
+      selectedAvatar = '😊';
+      renderAvatarGrid();
+      document.getElementById("newProfileModal").classList.add("active");
+    }
+
+    function hideNewProfileModal() {
+      document.getElementById("newProfileModal").classList.remove("active");
+    }
+
+    function renderAvatarGrid() {
+      let html = "";
+      AVATARS.forEach(avatar => {
+        html += "<div class='avatar-option " + (avatar === selectedAvatar ? "selected" : "") + "' onclick='selectAvatar(\"" + avatar + "\")'>" + avatar + "</div>";
+      });
+      document.getElementById("avatarGrid").innerHTML = html;
+    }
+
+    function selectAvatar(avatar) {
+      selectedAvatar = avatar;
+      renderAvatarGrid();
+    }
+
+    function createNewProfile() {
+      const name = document.getElementById("newProfileName").value.trim();
+      if (name) {
+        allProfiles.push({
+          id: Date.now(),
+          name: name,
+          avatar: selectedAvatar,
+          level: null,
+          totalPoints: 0,
+          booksRead: 0,
+          currentStreak: 0,
+          lastReadDate: null,
+          books: [],
+          achievements: [],
+          prizes: { weekly: "", monthly: "", streak: "" }
+        });
+        currentProfileId = allProfiles[allProfiles.length - 1].id;
+        document.getElementById("newProfileName").value = "";
+        hideNewProfileModal();
+        save();
+        renderProfileButtons();
+      }
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById("tab-" + tab).classList.add("active");
+      event.target.classList.add("active");
+      if (tab === "books") renderBooks();
+      if (tab === "recommendations") renderRecommendations();
+      if (tab === "achievements") renderAchievements();
+      if (tab === "challenges") renderChallenges();
+    }
+
+    function selectLevel(idx) {
+      const profile = getCurrentProfile();
+      profile.level = idx;
+      save();
+    }
+
+    function updateProfile() {
+      const profile = getCurrentProfile();
+      profile.name = document.getElementById("profileName").value;
+      save();
+    }
+
+    function renderBooks() {
+      const profile = getCurrentProfile();
+      if (profile.level === null) {
+        document.getElementById("bookContent").innerHTML = "<p class='empty-message'>Select a reading level first</p>";
+        return;
+      }
+      
+      let html = "";
+      
+      // Book Selector Box
+      html += "<div class='book-selector-box'>";
+      html += "<h3>📚 Add a Book</h3>";
+      
+      // Tab-like switcher
+      html += "<div style='display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid rgba(102,126,234,0.2); padding-bottom: 12px;'>";
+      html += "<button onclick='showDropdownMode()' id='dropdownModeBtn' style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;'>From Our List</button>";
+      html += "<button onclick='showManualMode()' id='manualModeBtn' style='background: transparent; color: #667eea; border: none; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 500;'>Manual Entry</button>";
+      html += "</div>";
+      
+      // Dropdown Mode
+      html += "<div id='dropdownMode'>";
+      html += "<div class='book-selector-row'>";
+      html += "<select id='bookDropdown' onchange='selectBookFromDropdown()'>";
+      html += "<option value=''>Choose a book from our list...</option>";
+      
+      RECOMMENDATIONS[profile.level].forEach(book => {
+        html += "<option value='" + JSON.stringify(book).replace(/'/g, "&#39;") + "'>" + book.title + " by " + book.author + "</option>";
+      });
+      
+      html += "</select>";
+      html += "<button class='btn-primary' onclick='addDropdownBook()'>Add</button>";
+      html += "</div>";
+      html += "</div>";
+      
+      // Manual Mode
+      html += "<div id='manualMode' style='display: none;'>";
+      html += "<div style='display: flex; flex-direction: column; gap: 12px;'>";
+      html += "<input type='text' id='manualBookTitle' placeholder='Book title' style='width: 100%; padding: 10px 12px; border: 2px solid #e5e5e5; border-radius: 6px; font-size: 14px;'>";
+      html += "<input type='text' id='manualBookAuthor' placeholder='Author (optional)' style='width: 100%; padding: 10px 12px; border: 2px solid #e5e5e5; border-radius: 6px; font-size: 14px;'>";
+      html += "<input type='number' id='manualBookChapters' placeholder='Total chapters' min='1' style='width: 100%; padding: 10px 12px; border: 2px solid #e5e5e5; border-radius: 6px; font-size: 14px;'>";
+      html += "<button class='btn-primary' onclick='addManualBook()' style='width: 100%;'>Add Book</button>";
+      html += "</div>";
+      html += "</div>";
+      html += "</div>";
+      
+      // Books List
+      if (profile.books.length === 0) {
+        html += "<p class='empty-message'>No books yet. Add one to get started!</p>";
+      } else {
+        html += "<div class='book-list'>";
+        profile.books.forEach((book, idx) => {
+          const pointsPerChapter = LEVELS[profile.level].points;
+          const progress = (book.currentChapter / book.chapters) * 100;
+          html += "<div class='book-card'>";
+          html += "<div class='book-header'>";
+          html += "<div><h3 class='book-title'>" + book.title + "</h3>";
+          html += "<p class='book-progress'>" + (book.completed ? "Complete ✓" : "Chapter " + book.currentChapter + " / " + book.chapters) + "</p></div>";
+          if (!book.completed) {
+            html += "<span class='points-badge'>+" + pointsPerChapter + " pts</span>";
+          }
+          html += "</div>";
+          
+          if (!book.completed) {
+            html += "<div class='progress-bar'><div class='progress-fill' style='width:" + progress + "%'></div></div>";
+            html += "<div class='button-group'>";
+            html += "<button class='btn-primary' onclick='logChapter(" + idx + ")'>Log chapter</button>";
+            if (book.currentChapter === book.chapters) {
+              html += "<button class='btn-success' onclick='completeBook(" + idx + ")'>Finish book</button>";
+            }
+            html += "</div>";
+          } else {
+            html += "<div class='button-group'>";
+            html += "<button class='btn-quiz' onclick='generateQuiz(" + idx + ")'>Take Quiz 🧠</button>";
+            html += "</div>";
+          }
+          html += "</div>";
+        });
+        html += "</div>";
+      }
+      
+      document.getElementById("bookContent").innerHTML = html;
+    }
+
+    function selectBookFromDropdown() {
+      // This is called when dropdown changes but we don't do anything on change
+      // User must click the Add button
+    }
+
+    function addDropdownBook() {
+      const dropdown = document.getElementById("bookDropdown");
+      if (!dropdown.value) {
+        alert("Please select a book");
+        return;
+      }
+      const book = JSON.parse(dropdown.value);
+      const profile = getCurrentProfile();
+      profile.books.push({ 
+        id: Date.now(), 
+        title: book.title, 
+        chapters: parseInt(book.chapters), 
+        currentChapter: 0, 
+        completed: false 
+      });
+      save();
+      renderBooks();
+      dropdown.value = "";
+    }
+
+    function showDropdownMode() {
+      document.getElementById("dropdownMode").style.display = "block";
+      document.getElementById("manualMode").style.display = "none";
+      document.getElementById("dropdownModeBtn").style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+      document.getElementById("dropdownModeBtn").style.color = "white";
+      document.getElementById("manualModeBtn").style.background = "transparent";
+      document.getElementById("manualModeBtn").style.color = "#667eea";
+    }
+
+    function showManualMode() {
+      document.getElementById("dropdownMode").style.display = "none";
+      document.getElementById("manualMode").style.display = "block";
+      document.getElementById("manualModeBtn").style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+      document.getElementById("manualModeBtn").style.color = "white";
+      document.getElementById("dropdownModeBtn").style.background = "transparent";
+      document.getElementById("dropdownModeBtn").style.color = "#667eea";
+    }
+
+    function addManualBook() {
+      const profile = getCurrentProfile();
+      const title = document.getElementById("manualBookTitle").value.trim();
+      const author = document.getElementById("manualBookAuthor").value.trim();
+      const chapters = parseInt(document.getElementById("manualBookChapters").value);
+      
+      if (!title) {
+        alert("Please enter a book title");
+        return;
+      }
+      if (!chapters || chapters < 1) {
+        alert("Please enter number of chapters");
+        return;
+      }
+      
+      profile.books.push({ 
+        id: Date.now(), 
+        title: title,
+        author: author || "Unknown",
+        chapters: chapters, 
+        currentChapter: 0, 
+        completed: false 
+      });
+      
+      document.getElementById("manualBookTitle").value = "";
+      document.getElementById("manualBookAuthor").value = "";
+      document.getElementById("manualBookChapters").value = "";
+      
+      save();
+      renderBooks();
+      alert("'" + title + "' added successfully!");
+    }
+
+    function addCustomBook() {
+      const profile = getCurrentProfile();
+      const title = document.getElementById("bookTitle").value.trim();
+      const chapters = parseInt(document.getElementById("bookChapters").value);
+      if (title && chapters > 0) {
+        profile.books.push({ 
+          id: Date.now(), 
+          title: title, 
+          chapters: chapters, 
+          currentChapter: 0, 
+          completed: false 
+        });
+        document.getElementById("bookTitle").value = "";
+        document.getElementById("bookChapters").value = "";
+        save();
+        renderBooks();
+      } else {
+        alert("Please enter a title and chapter count");
+      }
+    }
+
+    function logChapter(idx) {
+      const profile = getCurrentProfile();
+      if (profile.books[idx].currentChapter < profile.books[idx].chapters) {
+        profile.books[idx].currentChapter++;
+        profile.totalPoints += LEVELS[profile.level].points;
+        const today = new Date().toDateString();
+        const lastDate = profile.lastReadDate ? new Date(profile.lastReadDate).toDateString() : null;
+        if (lastDate !== today) {
+          profile.currentStreak = (lastDate === new Date(Date.now() - 86400000).toDateString()) ? profile.currentStreak + 1 : 1;
+        }
+        profile.lastReadDate = today;
+        save();
+        renderBooks();
+      }
+    }
+
+    function completeBook(idx) {
+      const profile = getCurrentProfile();
+      profile.books[idx].completed = true;
+      profile.booksRead++;
+      save();
+      renderBooks();
+    }
+
+    function generateQuiz(bookIdx) {
+      const profile = getCurrentProfile();
+      const book = profile.books[bookIdx];
+      
+      document.getElementById("quizTitle").textContent = "Quiz: " + book.title;
+      document.getElementById("quizModal").classList.add("active");
+
+      // Check if we have a sample quiz for this book
+      const quizData = SAMPLE_QUIZZES[book.title] || generateRandomQuiz(book.title);
+      currentQuiz = { bookIdx: bookIdx, bookTitle: book.title, data: quizData, showFeedback: false };
+      renderQuiz();
+    }
+
+    function generateRandomQuiz(bookTitle) {
+      // Fallback for books not in sample quizzes
+      const questions = [
+        { type: "mc", question: "What is the main theme of this book?", options: ["Adventure", "Love", "Mystery", "Survival"], correct: Math.floor(Math.random() * 4), explanation: "Every book has themes that drive the narrative." },
+        { type: "tf", question: "This book was published before 2000.", correct: Math.random() > 0.5, explanation: "Check the publication date on the book's cover." },
+        { type: "mc", question: "Which genre best describes this book?", options: ["Fiction", "Non-fiction", "Fantasy", "Science Fiction"], correct: Math.floor(Math.random() * 4), explanation: "Genre helps us understand what to expect from a book." },
+        { type: "tf", question: "The main character overcomes a major challenge.", correct: true, explanation: "Character growth often involves overcoming obstacles." },
+        { type: "sa", question: "What was your favorite moment in this book?", correctAnswers: ["great", "amazing", "loved", "enjoyed", "wonderful", "fantastic"] }
+      ];
+      return { questions: questions };
+    }
+
+    function renderQuiz() {
+      let html = "";
+      currentQuiz.data.questions.forEach((q, idx) => {
+        html += "<div class='question-card'>";
+        html += "<div class='question-number'>Question " + (idx + 1) + " of " + currentQuiz.data.questions.length + "</div>";
+        html += "<div class='question-text'>" + q.question + "</div>";
+        
+        if (q.type === "mc") {
+          q.options.forEach((opt, optIdx) => {
+            html += "<div class='option'><input type='radio' name='q" + idx + "' value='" + optIdx + "' id='opt" + idx + "_" + optIdx + "'><label for='opt" + idx + "_" + optIdx + "'>" + opt + "</label></div>";
+          });
+        } else if (q.type === "tf") {
+          html += "<div class='option'><input type='radio' name='q" + idx + "' value='true' id='opt" + idx + "_t'><label for='opt" + idx + "_t'>True</label></div>";
+          html += "<div class='option'><input type='radio' name='q" + idx + "' value='false' id='opt" + idx + "_f'><label for='opt" + idx + "_f'>False</label></div>";
+        } else if (q.type === "sa") {
+          html += "<input type='text' class='short-answer' id='q" + idx + "' placeholder='Your answer'>";
+        }
+        
+        // Show feedback if answers submitted
+        if (currentQuiz.showFeedback) {
+          html += "<div class='feedback' style='margin-top:12px;padding:12px;border-radius:6px;background:#f0f0f0;border-left:4px solid " + (isQuestionCorrect(q, idx) ? "#4CAF50" : "#f44336") + ";'>";
+          html += "<strong style='color:" + (isQuestionCorrect(q, idx) ? "#4CAF50" : "#f44336") + "'>" + (isQuestionCorrect(q, idx) ? "✓ Correct!" : "✗ Incorrect") + "</strong>";
+          if (q.explanation) {
+            html += "<p style='margin:8px 0 0 0;font-size:13px;color:#555;'>" + q.explanation + "</p>";
+          }
+          html += "</div>";
+        }
+        
+        html += "</div>";
+      });
+      
+      if (!currentQuiz.showFeedback) {
+        html += "<button class='btn-primary' onclick='submitQuiz()' style='width:100%;margin-top:16px'>Submit Quiz</button>";
+      } else {
+        html += "<button class='btn-primary' onclick='closeQuiz()' style='width:100%;margin-top:16px'>Done</button>";
+      }
+      
+      document.getElementById("quizContent").innerHTML = html;
+    }
+    
+    function isQuestionCorrect(q, idx) {
+      if (q.type === "mc") {
+        const selected = document.querySelector('input[name="q' + idx + '"]:checked');
+        return selected && parseInt(selected.value) === q.correct;
+      } else if (q.type === "tf") {
+        const selected = document.querySelector('input[name="q' + idx + '"]:checked');
+        return selected && (selected.value === 'true') === q.correct;
+      } else if (q.type === "sa") {
+        const answer = document.getElementById('q' + idx).value.toLowerCase().trim();
+        return q.correctAnswers && q.correctAnswers.some(a => answer.includes(a.toLowerCase()));
+      }
+      return false;
+    }
+
+    function submitQuiz() {
+      let score = 0;
+      const totalQuestions = currentQuiz.data.questions.length;
+
+      currentQuiz.data.questions.forEach((q, idx) => {
+        if (q.type === "mc") {
+          const selected = document.querySelector('input[name="q' + idx + '"]:checked');
+          if (selected && parseInt(selected.value) === q.correct) score++;
+        } else if (q.type === "tf") {
+          const selected = document.querySelector('input[name="q' + idx + '"]:checked');
+          if (selected && (selected.value === 'true') === q.correct) score++;
+        } else if (q.type === "sa") {
+          const answer = document.getElementById('q' + idx).value.toLowerCase().trim();
+          if (q.correctAnswers && q.correctAnswers.some(a => answer.includes(a.toLowerCase()))) score++;
+        }
+      });
+
+      const percentage = Math.round((score / totalQuestions) * 100);
+      
+      // Show results header
+      let html = "<div class='quiz-results' style='margin-bottom:16px;text-align:center;'>";
+      html += "<div class='results-score' style='font-size:32px;font-weight:700;color:#667eea;margin-bottom:8px;'>" + score + " / " + totalQuestions + "</div>";
+      html += "<div style='font-size:18px;margin-bottom:12px;'>";
+      if (percentage >= 80) html += "🎉 Excellent! You really know this book!";
+      else if (percentage >= 60) html += "👍 Good job! You understand the main points.";
+      else html += "📖 Keep reading! Try again later.";
+      html += "</div>";
+      html += "<div style='color:#999;font-size:14px;'>Accuracy: " + percentage + "%</div>";
+      html += "</div>";
+      
+      // Show each question with feedback
+      html += "<div style='margin-top:16px;border-top:1px solid #e5e5e5;padding-top:16px;'>";
+      html += "<h3 style='color:#333;margin-bottom:16px;font-size:16px;'>Review your answers:</h3>";
+      
+      currentQuiz.data.questions.forEach((q, idx) => {
+        const isCorrect = isQuestionCorrect(q, idx);
+        html += "<div style='margin-bottom:16px;padding:12px;border-radius:6px;background:" + (isCorrect ? "#f1f8f4" : "#fef5f5") + ";border-left:4px solid " + (isCorrect ? "#4CAF50" : "#f44336") + ";'>";
+        html += "<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px;'>";
+        html += "<span style='font-size:18px;'>" + (isCorrect ? "✓" : "✗") + "</span>";
+        html += "<strong style='color:" + (isCorrect ? "#4CAF50" : "#f44336") + ";'>Question " + (idx + 1) + "</strong>";
+        html += "</div>";
+        html += "<p style='margin:0 0 8px 0;color:#333;font-weight:500;'>" + q.question + "</p>";
+        if (q.explanation) {
+          html += "<p style='margin:0;color:#666;font-size:13px;line-height:1.5;'>" + q.explanation + "</p>";
+        }
+        html += "</div>";
+      });
+      
+      html += "</div>";
+      html += "<button class='btn-primary' onclick='closeQuiz()' style='width:100%;margin-top:16px'>Done</button>";
+      
+      document.getElementById("quizContent").innerHTML = html;
+    }
+
+    function closeQuiz() {
+      currentQuiz = null;
+      document.getElementById("quizModal").classList.remove("active");
+    }
+
+    function renderRecommendations() {
+      const profile = getCurrentProfile();
+      if (profile.level === null) {
+        document.getElementById("recContent").innerHTML = "<p class='empty-message'>Select a reading level first</p>";
+        return;
+      }
+      
+      let html = "<h3 style='font-size:16px;color:#667eea;margin-bottom:16px'>" + LEVELS[profile.level].name + " Recommendations</h3>";
+      html += "<div class='book-list'>";
+      
+      RECOMMENDATIONS[profile.level].forEach(book => {
+        html += "<div class='book-card'>";
+        html += "<div class='book-header'>";
+        html += "<div><h3 class='book-title'>" + book.title + "</h3>";
+        html += "<p class='book-progress'>by " + book.author + " • " + book.chapters + " chapters</p></div>";
+        html += "<span class='points-badge'>+" + LEVELS[profile.level].points + " pts</span>";
+        html += "</div>";
+        html += "<div class='button-group'>";
+        html += "<button class='btn-add' onclick='addRecommendedBook(\"" + book.title.replace(/"/g, '&quot;') + "\", " + book.chapters + ")'>Add to My Books</button>";
+        html += "</div>";
+        html += "</div>";
+      });
+      
+      html += "</div>";
+      document.getElementById("recContent").innerHTML = html;
+    }
+
+    function addRecommendedBook(title, chapters) {
+      const profile = getCurrentProfile();
+      profile.books.push({ 
+        id: Date.now(), 
+        title: title, 
+        chapters: chapters, 
+        currentChapter: 0, 
+        completed: false 
+      });
+      save();
+      alert("Added '" + title + "' to your books!");
+    }
+
+    function renderAchievements() {
+      const profile = getCurrentProfile();
+      const allAch = [
+        { id: "first100", desc: "Earn 100 points", emoji: "⭐", check: () => profile.totalPoints >= 100 },
+        { id: "first500", desc: "Earn 500 points", emoji: "🌟", check: () => profile.totalPoints >= 500 },
+        { id: "first1000", desc: "Earn 1000 points", emoji: "✨", check: () => profile.totalPoints >= 1000 },
+        { id: "book1", desc: "Complete 1 book", emoji: "📖", check: () => profile.booksRead >= 1 },
+        { id: "book5", desc: "Complete 5 books", emoji: "📚", check: () => profile.booksRead >= 5 },
+        { id: "book10", desc: "Complete 10 books", emoji: "🏆", check: () => profile.booksRead >= 10 },
+        { id: "streak7", desc: "7-day reading streak", emoji: "🔥", check: () => profile.currentStreak >= 7 },
+        { id: "streak30", desc: "30-day reading streak", emoji: "💥", check: () => profile.currentStreak >= 30 }
+      ];
+      
+      allAch.forEach(ach => {
+        if (ach.check() && !profile.achievements.includes(ach.id)) {
+          profile.achievements.push(ach.id);
+        }
+      });
+      
+      let html = "";
+      allAch.forEach(ach => {
+        const unlocked = profile.achievements.includes(ach.id);
+        html += "<div class='achievement-card " + (unlocked ? "unlocked" : "") + "'>";
+        html += "<div class='achievement-emoji'>" + ach.emoji + "</div>";
+        html += "<p class='achievement-name'>" + ach.desc + "</p>";
+        html += "</div>";
+      });
+      document.getElementById("achievementsGrid").innerHTML = html;
+      save();
+    }
+
+    function selectReward(challengeType, rewardId) {
+      const profile = getCurrentProfile();
+      profile.prizes[challengeType] = rewardId;
+      save();
+      renderChallenges();
+    }
+
+    function renderChallenges() {
+      const profile = getCurrentProfile();
+      const totalChapters = profile.books.reduce((sum, b) => sum + b.currentChapter, 0);
+      const pointsGoal = profile.level !== null ? LEVELS[profile.level].points * 20 : 160;
+
+      let html = "";
+
+      // Weekly Challenge
+      const weeklyComplete = (totalChapters % 3) >= 3;
+      const weeklyReward = profile.prizes.weekly;
+      html += "<div class='challenge-card " + (weeklyComplete ? "completed" : "") + "'>";
+      html += "<h3 class='challenge-title'>📖 Weekly Challenge</h3>";
+      html += "<p class='challenge-desc'>Read 3 chapters</p>";
+      html += "<div class='challenge-progress'><div style='width:" + Math.min(((totalChapters % 3) / 3) * 100, 100) + "%;background: linear-gradient(90deg, #667eea 0%, #764ba2 100%)'></div></div>";
+      html += "<p class='challenge-stat'>" + (totalChapters % 3) + " / 3 chapters</p>";
+      if (weeklyComplete) {
+        html += "<div class='reward-section'>";
+        html += "<h4>🎁 Select Your Reward:</h4>";
+        html += "<div class='reward-grid'>";
+        REWARDS.forEach(reward => {
+          html += "<div class='reward-option " + (weeklyReward === reward.id ? "selected" : "") + "' onclick='selectReward(\"weekly\", \"" + reward.id + "\")'>" + reward.icon + "<br>" + reward.name.split(' ')[1] + "</div>";
+        });
+        html += "</div>";
+        if (weeklyReward) {
+          html += "<p style='text-align: center; margin-top: 8px; font-size: 12px; color: #e65100;'>You selected: " + REWARDS.find(r => r.id === weeklyReward).name + "</p>";
+        }
+        html += "</div>";
+      }
+      html += "</div>";
+
+      // Monthly Challenge
+      const monthlyComplete = profile.totalPoints >= pointsGoal;
+      const monthlyReward = profile.prizes.monthly;
+      html += "<div class='challenge-card " + (monthlyComplete ? "completed" : "") + "'>";
+      html += "<h3 class='challenge-title'>⭐ Monthly Challenge</h3>";
+      html += "<p class='challenge-desc'>Earn " + pointsGoal + " points</p>";
+      html += "<div class='challenge-progress'><div style='width:" + Math.min((profile.totalPoints / pointsGoal) * 100, 100) + "%;background: linear-gradient(90deg, #667eea 0%, #764ba2 100%)'></div></div>";
+      html += "<p class='challenge-stat'>" + profile.totalPoints + " / " + pointsGoal + " points</p>";
+      if (monthlyComplete) {
+        html += "<div class='reward-section'>";
+        html += "<h4>🎁 Select Your Reward:</h4>";
+        html += "<div class='reward-grid'>";
+        REWARDS.forEach(reward => {
+          html += "<div class='reward-option " + (monthlyReward === reward.id ? "selected" : "") + "' onclick='selectReward(\"monthly\", \"" + reward.id + "\")'>" + reward.icon + "<br>" + reward.name.split(' ')[1] + "</div>";
+        });
+        html += "</div>";
+        if (monthlyReward) {
+          html += "<p style='text-align: center; margin-top: 8px; font-size: 12px; color: #e65100;'>You selected: " + REWARDS.find(r => r.id === monthlyReward).name + "</p>";
+        }
+        html += "</div>";
+      }
+      html += "</div>";
+
+      // Streak Challenge
+      const streakComplete = profile.currentStreak >= 30;
+      const streakReward = profile.prizes.streak;
+      html += "<div class='challenge-card " + (streakComplete ? "completed" : "") + "'>";
+      html += "<h3 class='challenge-title'>🔥 Streak Challenge</h3>";
+      html += "<p class='challenge-desc'>Read for 30 days straight</p>";
+      html += "<div class='challenge-progress'><div style='width:" + Math.min((profile.currentStreak / 30) * 100, 100) + "%;background: linear-gradient(90deg, #667eea 0%, #764ba2 100%)'></div></div>";
+      html += "<p class='challenge-stat'>" + profile.currentStreak + " / 30 days</p>";
+      if (streakComplete) {
+        html += "<div class='reward-section'>";
+        html += "<h4>🎁 Select Your Reward:</h4>";
+        html += "<div class='reward-grid'>";
+        REWARDS.forEach(reward => {
+          html += "<div class='reward-option " + (streakReward === reward.id ? "selected" : "") + "' onclick='selectReward(\"streak\", \"" + reward.id + "\")'>" + reward.icon + "<br>" + reward.name.split(' ')[1] + "</div>";
+        });
+        html += "</div>";
+        if (streakReward) {
+          html += "<p style='text-align: center; margin-top: 8px; font-size: 12px; color: #e65100;'>You selected: " + REWARDS.find(r => r.id === streakReward).name + "</p>";
+        }
+        html += "</div>";
+      }
+      html += "</div>";
+
+      document.getElementById("challengesContent").innerHTML = html;
+    }
+
+    function updateUI() {
+      const profile = getCurrentProfile();
+      document.getElementById("profileName").value = profile.name || "";
+      document.getElementById("userName").textContent = profile.name || "Guest";
+      document.getElementById("userLevel").textContent = profile.level !== null ? "Level: " + LEVELS[profile.level].name : "Level: Not selected";
+      document.getElementById("pointsValue").textContent = profile.totalPoints;
+      document.getElementById("booksValue").textContent = profile.booksRead;
+      document.getElementById("streakValue").textContent = profile.currentStreak;
+      document.getElementById("headerAvatar").textContent = profile.avatar || '😊';
+      document.querySelectorAll(".level-btn").forEach((btn, idx) => {
+        if (idx === profile.level) btn.classList.add("selected");
+        else btn.classList.remove("selected");
+      });
+    }
+
+    renderProfileButtons();
+    updateUI();
+
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/Read-Quest/app/sw.js').then(reg => {
+        console.log('Service Worker registered');
+      }).catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+    }
+
+    // Footer and Modal Functions
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove("active");
+      document.body.style.overflow = "auto";
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      closeModal('missionModal');
+    }
+
+    function showFeatures() {
+      alert("Read Quest Features:\n✨ Multi-profile support with custom avatars\n📚 Personalized book recommendations by reading level\n🎮 Gamified reading with points and achievements\n🏆 Challenges with rewards\n📊 Progress tracking with reading streaks\n🤖 AI-powered quizzes via Claude API\n📱 PWA with offline support\n🌈 Beautiful gradient UI design");
+    }
+
+    function showLevels() {
+      alert("Reading Levels in Read Quest:\n\n📚 Early Reader (K-5): 5 pts/chapter\n🎓 Junior (Grades 6-9): 8 pts/chapter\n👥 Teen (Grades 9-12): 35 pts/chapter\n📖 Adult (17+): 40 pts/chapter\n\nChoose your level and start your reading quest!");
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.classList.remove("active");
+        document.body.style.overflow = "auto";
+      }
+    }
+  </script>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>PRODUCT</h4>
+        <ul>
+          <li><a href="#" onclick="scrollToTop()">Launch App</a></li>
+          <li><a href="#" onclick="showFeatures()">Features</a></li>
+          <li><a href="#" onclick="showLevels()">Reading Levels</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>ABOUT</h4>
+        <ul>
+          <li><a href="#" onclick="openModal('missionModal'); return false;">Our Mission</a></li>
+          <li><a href="#" onclick="openModal('blogModal'); return false;">Blog</a></li>
+          <li><a href="#" onclick="openModal('contactModal'); return false;">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>LEGAL</h4>
+        <ul>
+          <li><a href="#" onclick="openModal('privacyModal'); return false;">Privacy Policy</a></li>
+          <li><a href="#" onclick="openModal('termsModal'); return false;">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Read Quest. All rights reserved. | Gamified reading for all ages.</p>
+    </div>
+  </footer>
+
+  <!-- Mission Modal -->
+  <div id="missionModal" class="modal">
+    <div class="modal-content-legal">
+      <span class="close-btn" onclick="closeModal('missionModal')">&times;</span>
+      <h2>Our Mission</h2>
+      <p>At Read Quest, we believe that reading is a journey, not a destination. Our mission is to make reading engaging, rewarding, and fun for readers of all ages and reading levels.</p>
+      <p>We've created a gamified platform that transforms reading into an adventure where every chapter completed earns points, unlocks achievements, and builds reading streaks. Whether you're a parent encouraging your child's early reading, a student exploring classic literature, or an adult discovering new worlds through books, Read Quest is designed to celebrate your reading journey.</p>
+      <p><strong>What We Believe:</strong></p>
+      <ul>
+        <li>📚 Reading opens doors to infinite possibilities</li>
+        <li>✨ Every reader deserves personalized recommendations</li>
+        <li>🎮 Gamification makes reading more enjoyable and rewarding</li>
+        <li>🌍 Books connect us across cultures and generations</li>
+        <li>🏆 Every achievement, no matter how small, deserves celebration</li>
+      </ul>
+      <p>Join us on this quest to foster a love of reading in communities everywhere.</p>
+    </div>
+  </div>
+
+  <!-- Privacy Policy Modal -->
+  <div id="privacyModal" class="modal">
+    <div class="modal-content-legal">
+      <span class="close-btn" onclick="closeModal('privacyModal')">&times;</span>
+      <h2>Privacy Policy</h2>
+      <p><strong>Last Updated: September 2026</strong></p>
+      <p>Read Quest is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our reading application.</p>
+      <h3>1. Information We Collect</h3>
+      <p>We collect information that you voluntarily provide, including:</p>
+      <ul>
+        <li>Profile information (name and avatar emoji selection)</li>
+        <li>Reading level selection</li>
+        <li>Book selections and reading progress</li>
+        <li>Points, achievements, and reading streaks</li>
+      </ul>
+      <h3>2. How We Use Your Information</h3>
+      <p>Your information is used to:</p>
+      <ul>
+        <li>Create and maintain your reading profile</li>
+        <li>Provide personalized book recommendations</li>
+        <li>Track reading progress and achievements</li>
+        <li>Improve the app experience</li>
+      </ul>
+      <h3>3. Data Storage</h3>
+      <p>All your data is stored locally on your device using browser storage. We do not transmit personal data to external servers. Your reading journey remains private and under your control.</p>
+      <h3>4. Offline Functionality</h3>
+      <p>Read Quest works offline. Service workers cache app data to provide a seamless experience without internet connection.</p>
+      <h3>5. Children's Privacy</h3>
+      <p>Read Quest is designed for readers of all ages. We do not knowingly collect personal information from children under 13 without parental consent. Parents and guardians control their children's profiles.</p>
+      <h3>6. Contact Us</h3>
+      <p>For privacy concerns or questions, please reach out through our Contact page.</p>
+    </div>
+  </div>
+
+  <!-- Terms of Service Modal -->
+  <div id="termsModal" class="modal">
+    <div class="modal-content-legal">
+      <span class="close-btn" onclick="closeModal('termsModal')">&times;</span>
+      <h2>Terms of Service</h2>
+      <p><strong>Last Updated: September 2026</strong></p>
+      <p>Welcome to Read Quest! Please read these Terms of Service carefully before using our application.</p>
+      <h3>1. Acceptance of Terms</h3>
+      <p>By accessing and using Read Quest, you accept and agree to be bound by the terms and provision of this agreement.</p>
+      <h3>2. License Grant</h3>
+      <p>Read Quest grants you a non-exclusive, non-transferable, revocable license to access and use the application for personal, non-commercial purposes.</p>
+      <h3>3. User Responsibilities</h3>
+      <p>You agree to:</p>
+      <ul>
+        <li>Use the app in a lawful manner and in accordance with all applicable laws</li>
+        <li>Not engage in any conduct that restricts or inhibits anyone's use or enjoyment of the app</li>
+        <li>Not transmit obscene, offensive, or disruptive content</li>
+      </ul>
+      <h3>4. Book Recommendations</h3>
+      <p>Read Quest provides curated book recommendations based on reading levels. These recommendations come from established education lists and reader preferences. We encourage exploration of all recommended titles, though parental guidance is recommended for younger readers.</p>
+      <h3>5. Personal Data and Privacy</h3>
+      <p>Your use of Read Quest is also governed by our Privacy Policy. All data is stored locally on your device.</p>
+      <h3>6. Disclaimer of Warranties</h3>
+      <p>Read Quest is provided "as-is" without warranties of any kind. We do not warrant that the app will be uninterrupted or error-free.</p>
+      <h3>7. Limitation of Liability</h3>
+      <p>In no event shall Read Quest be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the application.</p>
+      <h3>8. Modification of Terms</h3>
+      <p>We reserve the right to modify these terms at any time. Your continued use of the app constitutes acceptance of modified terms.</p>
+      <h3>9. Contact Information</h3>
+      <p>For questions about these Terms of Service, please contact us through our Contact page.</p>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div id="contactModal" class="modal">
+    <div class="modal-content-legal">
+      <span class="close-btn" onclick="closeModal('contactModal')">&times;</span>
+      <h2>Contact Us</h2>
+      <p>Have questions or need support? Reach out to us:</p>
+      <p><strong>Support Email:</strong> readquestsupport@gmail.com</p>
+    </div>
+  </div>
+
+  <!-- Blog Modal -->
+  <div id="blogModal" class="modal">
+    <div class="modal-content-legal">
+      <span class="close-btn" onclick="closeModal('blogModal')">&times;</span>
+      <h2>Read Quest Blog</h2>
+      <p>Coming soon! We're working on exciting blog posts about reading tips, book recommendations, and the power of gamified learning.</p>
+      <p>Check back soon for content about:</p>
+      <ul>
+        <li>📖 Classic Literature Deep Dives</li>
+        <li>🎓 Reading Tips for Every Age</li>
+        <li>🌟 Author Spotlights</li>
+        <li>🏆 Reader Success Stories</li>
+        <li>📚 Genre Explorations</li>
+      </ul>
+    </div>
+  </div>
+
+</body>
+</html>
